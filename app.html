@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>FPSC Exam Portal by Simply Commerce Academy</title>
+<script src="/assets/logo.js"></script>
+<style>
+  :root{
+    --ink:#1C2B5A; --gold:#C2922A; --paper:#F6F5EF; --rule:#D9D4C7;
+    --white:#fff; --ok:#2E7D4F; --bad:#B3362B; --muted:#5a5f6e;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+  header{
+    background:var(--ink); color:#fff; padding:10px 16px;
+    display:flex; align-items:center; gap:12px;
+  }
+  header img{width:34px; height:auto; background:#fff; padding:2px; border-radius:4px}
+  .ht{flex:1; min-width:0}
+  .ht b{font-family:Georgia,serif; font-size:17px; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .ht span{font-size:11.5px; color:#c9cede}
+  #who{font-size:12.5px; color:#c9cede; text-align:right}
+  #who button{margin-left:8px; background:none; border:1px solid #58628a; color:#fff; padding:4px 10px; border-radius:4px; cursor:pointer; font-size:12.5px}
+  nav{background:#fff; border-bottom:1px solid var(--rule); display:flex; gap:4px; padding:0 10px; overflow-x:auto}
+  nav button{
+    background:none; border:0; border-bottom:3px solid transparent; padding:12px 14px;
+    font-size:14.5px; font-weight:600; color:var(--muted); cursor:pointer; white-space:nowrap;
+  }
+  nav button.on{color:var(--ink); border-bottom-color:var(--gold)}
+  nav button:focus-visible{outline:2px solid var(--gold); outline-offset:-2px}
+  main{max-width:860px; margin:0 auto; padding:18px 14px 60px}
+  h2{font-family:Georgia,serif; font-size:20px; margin:6px 0 2px}
+  .marks{color:var(--muted); font-size:13px; margin:0 0 10px}
+  .secname{font-size:13px; font-weight:700; color:var(--gold); margin:18px 0 6px}
+  .trow{
+    background:#fff; border:1px solid var(--rule); border-radius:6px;
+    padding:12px 14px; margin-bottom:8px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  }
+  .trow .t{flex:1; min-width:180px; font-size:15px}
+  .chip{font-size:12px; padding:2px 8px; border-radius:10px; background:#eef0ea; color:var(--muted)}
+  .chip.done{background:#e4efe7; color:var(--ok)}
+  .trow button{
+    border:1px solid var(--ink); background:#fff; color:var(--ink);
+    padding:7px 12px; border-radius:4px; font-size:13.5px; cursor:pointer;
+  }
+  .trow button.primary{background:var(--ink); color:#fff}
+  .trow button:focus-visible,.opt:focus-visible{outline:3px solid var(--gold); outline-offset:1px}
+  .back{background:none; border:0; color:var(--ink); font-size:14px; cursor:pointer; padding:0; margin-bottom:10px; text-decoration:underline}
+  .paper{background:#fff; border:1px solid var(--rule); border-radius:6px; padding:18px 18px 20px}
+  .notes{white-space:pre-wrap; font-size:15px; line-height:1.65; max-width:70ch}
+  .qnum{font-size:13px; color:var(--muted); margin-bottom:6px}
+  .qtext{font-size:16.5px; line-height:1.5; margin-bottom:14px; font-family:Georgia,serif}
+  .opt{
+    display:block; width:100%; text-align:left; background:#fff; border:1px solid var(--rule);
+    border-radius:6px; padding:11px 13px; margin-bottom:8px; font-size:15px; cursor:pointer; color:var(--ink);
+  }
+  .opt:hover{border-color:var(--ink)}
+  .opt.right{border-color:var(--ok); background:#e9f3ec}
+  .opt.wrong{border-color:var(--bad); background:#faeeec}
+  .opt.chosen{border-width:2px}
+  .opt[disabled]{cursor:default}
+  .expl{margin-top:12px; padding:10px 12px; background:var(--paper); border-left:3px solid var(--gold); font-size:14px; line-height:1.55}
+  .bar{display:flex; justify-content:space-between; align-items:center; margin:14px 0}
+  .btn{background:var(--ink); color:#fff; border:0; padding:11px 18px; border-radius:4px; font-size:15px; font-weight:600; cursor:pointer}
+  .btn.ghost{background:#fff; color:var(--ink); border:1px solid var(--ink)}
+  .btn:focus-visible{outline:3px solid var(--gold); outline-offset:2px}
+  .score{font-family:Georgia,serif; font-size:30px; text-align:center; margin:10px 0 2px}
+  .score small{display:block; font-family:inherit; font-size:14px; color:var(--muted); margin-top:4px}
+  #timer{font-weight:700; font-variant-numeric:tabular-nums}
+  #timer.low{color:var(--bad)}
+  table{width:100%; border-collapse:collapse; background:#fff; border:1px solid var(--rule); font-size:14px}
+  th,td{padding:9px 10px; text-align:left; border-bottom:1px solid var(--rule)}
+  th{background:var(--paper); font-size:12.5px}
+  td.r,th.r{text-align:right}
+  .note{font-size:13.5px; color:var(--muted)}
+  .lockmsg{max-width:420px; margin:60px auto; background:#fff; border-top:4px solid var(--gold); padding:24px; text-align:center}
+  .lockmsg a{color:var(--ink)}
+  footer{text-align:center; font-size:12.5px; color:var(--muted); padding:20px 10px 30px}
+  footer a{color:var(--ink)}
+  .rev{border:1px solid var(--rule); border-radius:6px; padding:12px 14px; margin-bottom:10px; background:#fff; font-size:14px}
+  .rev .q{font-weight:600; margin-bottom:6px}
+  .rev .you{color:var(--bad)} .rev .cor{color:var(--ok)}
+</style>
+</head>
+<body>
+<header>
+  <img id="logo" alt="">
+  <div class="ht"><b>FPSC Exam Portal</b><span>Simply Commerce Academy · Assistant Audit Officer (BS-17)</span></div>
+  <div id="who"></div>
+</header>
+<nav id="nav" style="display:none">
+  <button data-v="syllabus" class="on">Syllabus &amp; practice</button>
+  <button data-v="mock">Mock test</button>
+  <button data-v="progress">My progress</button>
+</nav>
+<main id="main"><p class="note">Loading…</p></main>
+<footer>
+  Made by Simply Commerce Academy ·
+  <a href="https://wa.me/923322466420" target="_blank" rel="noopener">WhatsApp +92 332 2466420</a> ·
+  <a href="https://www.youtube.com/@SimplyCommerceAcademy-i5w" target="_blank" rel="noopener">YouTube</a>
+</footer>
+
+<script>
+document.getElementById("logo").src = window.SCA_LOGO;
+const fav = document.createElement("link"); fav.rel="icon"; fav.href=window.SCA_LOGO; document.head.appendChild(fav);
+
+const M = document.getElementById("main");
+let ME=null, TOPICS=[], PROG={byTopic:[],recent:[]}, mockTimer=null;
+
+const api = async (p, opts) => {
+  const r = await fetch("/api"+p, opts);
+  let d=null; try{ d = await r.json(); }catch{}
+  if(r.status===401){ location.href="/"; throw 0; }
+  if(r.status===403 && d && (d.error==="expired"||d.error==="inactive")){ locked(d); throw 0; }
+  return d;
+};
+function locked(d){
+  document.getElementById("nav").style.display="none";
+  M.innerHTML = `<div class="lockmsg">
+    <h2>${d.error==="expired"?"Access has ended":"Account not active"}</h2>
+    <p class="note">${d.error==="expired"
+      ? "Portal access for this exam cycle ended on "+d.expiry+"."
+      : "Your account has been deactivated."}
+      <br>Message us on <a href="https://wa.me/923322466420">WhatsApp</a> if you think this is a mistake.</p>
+    <button class="btn" onclick="signout()">Sign out</button></div>`;
+}
+async function signout(){ await fetch("/api/logout",{method:"POST"}); location.href="/"; }
+
+function esc(s){ return String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function bestFor(id){ const r = PROG.byTopic.find(x=>x.topic_id===id); return r ? r.best : null; }
+function topicName(id){ const t = TOPICS.find(t=>t.id===id); return t ? t.title : "—"; }
+
+/* ---------- views ---------- */
+function viewSyllabus(){
+  const parts = [
+    {part:"I",  head:"Part-I · English", marks:"20 marks of 100 · 20 MCQs in the paper"},
+    {part:"II", head:"Part-II · Professional", marks:"80 marks of 100 · accounting, audit and public-sector topics"},
+  ];
+  let h = "";
+  for(const p of parts){
+    h += `<h2>${p.head}</h2><p class="marks">${p.marks}</p>`;
+    const ts = TOPICS.filter(t=>t.part===p.part);
+    const secs = [...new Set(ts.map(t=>t.section))];
+    for(const s of secs){
+      if(secs.length>1) h += `<div class="secname">${esc(s)}</div>`;
+      for(const t of ts.filter(x=>x.section===s)){
+        const b = bestFor(t.id);
+        h += `<div class="trow">
+          <span class="t">${esc(t.title)}</span>
+          <span class="chip ${b!==null?"done":""}">${b!==null? "best "+b+"%" : "not practised"}</span>
+          <button onclick="openNotes(${t.id})">Notes</button>
+          <button class="primary" onclick="startPractice(${t.id})">Practise</button>
+        </div>`;
+      }
+    }
+  }
+  h += `<p class="note">The question bank currently holds sample content while the full course is being loaded.</p>`;
+  M.innerHTML = h;
+}
+
+async function openNotes(id){
+  const d = await api("/notes?id="+id);
+  M.innerHTML = `<button class="back" onclick="show('syllabus')">&larr; Back to syllabus</button>
+    <div class="paper"><h2>${esc(d.topic.title)}</h2>
+    <p class="marks">Part-${d.topic.part} · ${esc(d.topic.section)}</p>
+    <div class="notes">${esc(d.topic.notes)}</div>
+    <div class="bar"><span></span><button class="btn" onclick="startPractice(${d.topic.id})">Practise this topic</button></div>
+    </div>`;
+  window.scrollTo(0,0);
+}
+
+/* ---------- practice ---------- */
+let P=null;
+async function startPractice(id){
+  const d = await api("/mcqs?topic_id="+id+"&limit=20");
+  if(!d.questions.length){ alert("No questions in this topic yet."); return; }
+  P = {topic:id, qs:d.questions, i:0, score:0};
+  renderPractice();
+}
+function renderPractice(){
+  const q = P.qs[P.i];
+  M.innerHTML = `<button class="back" onclick="show('syllabus')">&larr; Quit practice</button>
+    <div class="paper">
+      <div class="qnum">Question ${P.i+1} of ${P.qs.length} · ${esc(topicName(P.topic))}</div>
+      <div class="qtext">${esc(q.question)}</div>
+      ${["a","b","c","d"].map(k=>`<button class="opt" data-k="${k}" onclick="answer('${k}')">${k.toUpperCase()}. ${esc(q[k])}</button>`).join("")}
+      <div id="ex"></div>
+      <div class="bar"><span class="note">Score so far: ${P.score}</span><button class="btn" id="nx" style="display:none" onclick="nextP()">Next</button></div>
+    </div>`;
+  window.scrollTo(0,0);
+}
+function answer(k){
+  const q = P.qs[P.i];
+  document.querySelectorAll(".opt").forEach(o=>{
+    o.disabled = true;
+    if(o.dataset.k===q.correct) o.classList.add("right");
+    if(o.dataset.k===k){ o.classList.add("chosen"); if(k!==q.correct) o.classList.add("wrong"); }
+  });
+  if(k===q.correct) P.score++;
+  document.getElementById("ex").innerHTML = `<div class="expl"><b>${k===q.correct?"Correct.":"Not quite."}</b> ${esc(q.explanation)}</div>`;
+  const nx = document.getElementById("nx");
+  nx.style.display="inline-block";
+  nx.textContent = P.i+1 < P.qs.length ? "Next" : "Finish";
+}
+async function nextP(){
+  P.i++;
+  if(P.i < P.qs.length){ renderPractice(); return; }
+  await api("/attempt",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({kind:"practice",topic_id:P.topic,score:P.score,total:P.qs.length})});
+  const pct = Math.round(100*P.score/P.qs.length);
+  M.innerHTML = `<div class="paper" style="text-align:center">
+    <h2>Practice complete</h2>
+    <div class="score">${P.score} / ${P.qs.length}<small>${pct}% · ${esc(topicName(P.topic))}</small></div>
+    <div class="bar" style="justify-content:center;gap:10px">
+      <button class="btn ghost" onclick="startPractice(${P.topic})">Try again</button>
+      <button class="btn" onclick="refreshProgress().then(()=>show('syllabus'))">Back to syllabus</button>
+    </div></div>`;
+}
+
+/* ---------- mock ---------- */
+let K=null;
+function viewMock(){
+  M.innerHTML = `<div class="paper">
+    <h2>Mock test</h2>
+    <p class="notes" style="white-space:normal">The real paper is 100 MCQs — 20 English and 80 professional — with no negative marking announced so far. This mock draws the same mix from the question bank and runs on a timer. Answers and explanations are shown at the end, not during the test.</p>
+    <p class="note">The bank currently holds sample questions, so this mock will be shorter than 100 until the full content is loaded.</p>
+    <div class="bar"><span></span><button class="btn" onclick="startMock()">Start mock test</button></div>
+  </div>`;
+}
+async function startMock(){
+  const d = await api("/mock");
+  if(!d.questions.length){ alert("No questions available yet."); return; }
+  K = {qs:d.questions, i:0, ans:Array(d.questions.length).fill(null), ends:Date.now()+d.minutes*60000};
+  clearInterval(mockTimer);
+  mockTimer = setInterval(tick, 500);
+  renderMock();
+}
+function tick(){
+  if(!K) return;
+  const left = K.ends - Date.now();
+  const el = document.getElementById("timer");
+  if(left<=0){ finishMock(); return; }
+  if(el){
+    const m = Math.floor(left/60000), s = Math.floor(left%60000/1000);
+    el.textContent = m+":"+String(s).padStart(2,"0");
+    el.classList.toggle("low", left<5*60000);
+  }
+}
+function renderMock(){
+  const q = K.qs[K.i], picked = K.ans[K.i];
+  M.innerHTML = `<div class="paper">
+    <div class="bar" style="margin-top:0">
+      <span class="qnum">Question ${K.i+1} of ${K.qs.length} · Part-${q.part}</span>
+      <span class="note">Time left: <span id="timer">--:--</span></span>
+    </div>
+    <div class="qtext">${esc(q.question)}</div>
+    ${["a","b","c","d"].map(k=>`<button class="opt ${picked===k?"chosen":""}" onclick="pick('${k}')">${k.toUpperCase()}. ${esc(q[k])}</button>`).join("")}
+    <div class="bar">
+      <button class="btn ghost" ${K.i===0?"disabled":""} onclick="K.i--;renderMock()">Previous</button>
+      <span class="note">${K.ans.filter(a=>a).length} answered</span>
+      ${K.i+1<K.qs.length
+        ? `<button class="btn" onclick="K.i++;renderMock()">Next</button>`
+        : `<button class="btn" onclick="finishMock()">Finish test</button>`}
+    </div></div>`;
+  tick();
+}
+function pick(k){ K.ans[K.i]=k; if(K.i+1<K.qs.length){K.i++;} renderMock(); }
+async function finishMock(){
+  clearInterval(mockTimer);
+  if(!K) return;
+  const qs=K.qs, ans=K.ans; K=null;
+  let score=0; qs.forEach((q,i)=>{ if(ans[i]===q.correct) score++; });
+  await api("/attempt",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({kind:"mock",score,total:qs.length})});
+  const pct = Math.round(100*score/qs.length);
+  const wrong = qs.map((q,i)=>({q,i})).filter(x=>ans[x.i]!==x.q.correct);
+  M.innerHTML = `<div class="paper" style="text-align:center">
+      <h2>Mock test result</h2>
+      <div class="score">${score} / ${qs.length}<small>${pct}%</small></div>
+    </div>
+    <h2 style="margin-top:22px">Review${wrong.length?` — ${wrong.length} to revisit`:""}</h2>
+    ${wrong.length? wrong.map(x=>`
+      <div class="rev">
+        <div class="q">${esc(x.q.question)}</div>
+        <div>${ans[x.i] ? `<span class="you">Your answer: ${ans[x.i].toUpperCase()}. ${esc(x.q[ans[x.i]])}</span>` : `<span class="you">Not answered</span>`}</div>
+        <div><span class="cor">Correct: ${x.q.correct.toUpperCase()}. ${esc(x.q[x.q.correct])}</span></div>
+        <div class="note" style="margin-top:4px">${esc(x.q.explanation)} <i>(${esc(x.q.topic)})</i></div>
+      </div>`).join("")
+      : `<p class="note">Everything correct — well done.</p>`}
+    <div class="bar"><span></span><button class="btn" onclick="refreshProgress().then(()=>show('progress'))">See my progress</button></div>`;
+  window.scrollTo(0,0);
+}
+
+/* ---------- progress ---------- */
+function viewProgress(){
+  const rows = PROG.recent.map(a=>`<tr>
+    <td>${a.kind==="mock"?"Mock test":"Practice"}</td>
+    <td>${a.topic_id?esc(topicName(a.topic_id)):"Full paper mix"}</td>
+    <td class="r">${a.score} / ${a.total}</td>
+    <td class="r">${Math.round(100*a.score/a.total)}%</td>
+    <td class="r">${a.created_at.slice(0,10)}</td></tr>`).join("");
+  const tops = PROG.byTopic.map(b=>`<tr>
+    <td>${esc(topicName(b.topic_id))}</td>
+    <td class="r">${b.attempts}</td><td class="r">${b.best}%</td></tr>`).join("");
+  M.innerHTML = `<h2>Recent attempts</h2>
+    ${rows? `<table><tr><th>Type</th><th>Topic</th><th class="r">Score</th><th class="r">%</th><th class="r">Date</th></tr>${rows}</table>`
+          : `<p class="note">Nothing attempted yet — pick a topic on the syllabus tab and practise it.</p>`}
+    <h2 style="margin-top:24px">By topic</h2>
+    ${tops? `<table><tr><th>Topic</th><th class="r">Attempts</th><th class="r">Best</th></tr>${tops}</table>`
+          : `<p class="note">Topic scores will appear here after your first practice.</p>`}`;
+}
+
+/* ---------- shell ---------- */
+async function refreshProgress(){ PROG = await api("/progress"); }
+function show(v){
+  document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on", b.dataset.v===v));
+  clearInterval(mockTimer); K=null;
+  if(v==="syllabus") viewSyllabus();
+  else if(v==="mock") viewMock();
+  else viewProgress();
+}
+document.getElementById("nav").addEventListener("click", e=>{
+  const b = e.target.closest("button"); if(b) show(b.dataset.v);
+});
+
+(async function init(){
+  try{
+    ME = await api("/me");
+    document.getElementById("who").innerHTML = `${esc(ME.name)}<button onclick="signout()">Sign out</button>`;
+    const c = await api("/content"); TOPICS = c.topics;
+    await refreshProgress();
+    document.getElementById("nav").style.display="flex";
+    show("syllabus");
+  }catch(e){ /* redirected or locked */ }
+})();
+</script>
+</body>
+</html>

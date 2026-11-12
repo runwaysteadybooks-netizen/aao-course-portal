@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Sign in · FPSC Exam Portal by Simply Commerce Academy</title>
+<script src="/assets/logo.js"></script>
+<style>
+  :root{
+    --ink:#1C2B5A; --ink-deep:#14204a; --gold:#C2922A; --paper:#F6F5EF;
+    --rule:#D9D4C7; --white:#fff; --bad:#B3362B;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+    background:var(--ink); color:var(--ink);
+    display:flex; flex-direction:column; align-items:center;
+  }
+  main{flex:1; display:flex; align-items:center; justify-content:center; width:100%; padding:24px 16px}
+  .card{
+    background:var(--white); width:100%; max-width:380px;
+    border-top:4px solid var(--gold); padding:28px 26px 24px;
+    box-shadow:0 10px 30px rgba(0,0,0,.35);
+  }
+  .brand{text-align:center; margin-bottom:4px}
+  .brand img{width:72px; height:auto}
+  h1{
+    font-family:Georgia,"Times New Roman",serif; font-size:24px; font-weight:700;
+    text-align:center; margin:10px 0 2px;
+  }
+  .by{text-align:center; font-size:13px; color:#5a5f6e; margin:0 0 2px}
+  .exam{
+    text-align:center; font-family:Georgia,serif; font-size:13.5px; color:var(--ink);
+    border-top:1px solid var(--rule); border-bottom:1px solid var(--rule);
+    padding:8px 0; margin:14px 0 18px;
+  }
+  label{display:block; font-size:13px; font-weight:600; margin:12px 0 4px}
+  input{
+    width:100%; padding:11px 12px; font-size:16px; border:1px solid #b9b4a6;
+    border-radius:4px; background:#fff; color:var(--ink);
+  }
+  input:focus{outline:2px solid var(--gold); outline-offset:1px; border-color:var(--gold)}
+  button{
+    width:100%; margin-top:18px; padding:12px; font-size:16px; font-weight:700;
+    background:var(--ink); color:#fff; border:0; border-radius:4px; cursor:pointer;
+  }
+  button:hover{background:var(--ink-deep)}
+  button:focus-visible{outline:3px solid var(--gold); outline-offset:2px}
+  button[disabled]{opacity:.6; cursor:wait}
+  .err{
+    display:none; margin-top:14px; padding:10px 12px; font-size:14px;
+    background:#faeeec; border-left:3px solid var(--bad); color:#6d2018;
+  }
+  .hint{font-size:12.5px; color:#5a5f6e; text-align:center; margin-top:14px}
+  .hint a{color:var(--ink)}
+  footer{
+    width:100%; text-align:center; padding:16px 12px 22px; font-size:12.5px;
+    color:#c9cede;
+  }
+  footer a{color:#e9d9ac; text-decoration:none}
+  footer a:hover{text-decoration:underline}
+  .sep{margin:0 6px; color:#6d7693}
+</style>
+</head>
+<body>
+<main>
+  <form class="card" id="f" autocomplete="off">
+    <div class="brand"><img id="logo" alt="Simply Commerce Academy"></div>
+    <h1>FPSC Exam Portal</h1>
+    <p class="by">by Simply Commerce Academy — Where Commerce Meets Clarity</p>
+    <p class="exam">Assistant Audit Officer (BS-17)<br>Office of the Auditor-General of Pakistan</p>
+
+    <label for="phone">Mobile number</label>
+    <input id="phone" name="phone" inputmode="tel" placeholder="03XX XXXXXXX" required>
+
+    <label for="password">Password</label>
+    <input id="password" name="password" type="password" required>
+
+    <button id="btn" type="submit">Sign in</button>
+    <div class="err" id="err" role="alert"></div>
+
+    <p class="hint">No account yet? Message us on <a href="https://wa.me/923322466420" target="_blank" rel="noopener">WhatsApp</a> to enrol.</p>
+  </form>
+</main>
+<footer>
+  Made by Simply Commerce Academy
+  <span class="sep">·</span><a href="https://wa.me/923322466420" target="_blank" rel="noopener">WhatsApp +92 332 2466420</a>
+  <br>
+  <a href="https://www.youtube.com/@SimplyCommerceAcademy-i5w" target="_blank" rel="noopener">YouTube</a>
+  <span class="sep">·</span><a href="https://facebook.com/profile.php?id=61566147640997" target="_blank" rel="noopener">Facebook</a>
+  <span class="sep">·</span><a href="https://instagram.com/simplycommerceacademy" target="_blank" rel="noopener">Instagram</a>
+</footer>
+<script>
+  document.getElementById("logo").src = window.SCA_LOGO;
+  const link = document.createElement("link"); link.rel = "icon"; link.href = window.SCA_LOGO;
+  document.head.appendChild(link);
+
+  function deviceId(){
+    let d = localStorage.getItem("sca_device");
+    if(!d){ d = crypto.randomUUID(); localStorage.setItem("sca_device", d); }
+    return d;
+  }
+  const MSG = {
+    auth: "Phone number or password is incorrect.",
+    locked: "Too many failed attempts. Try again in about 15 minutes.",
+    device: "This account is already linked to another device. Message us on WhatsApp to reset it.",
+    inactive: "This account is not active. Please contact us on WhatsApp.",
+    expired: "Access for this exam cycle has ended.",
+  };
+  const f = document.getElementById("f"), err = document.getElementById("err"), btn = document.getElementById("btn");
+  f.addEventListener("submit", async (e) => {
+    e.preventDefault(); err.style.display = "none"; btn.disabled = true;
+    try{
+      const r = await fetch("/api/login", {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({
+          phone: document.getElementById("phone").value,
+          password: document.getElementById("password").value,
+          device_id: deviceId(),
+        }),
+      });
+      const d = await r.json();
+      if(d.ok){ location.href = d.role === "admin" ? "/admin.html" : "/app.html"; return; }
+      err.textContent = d.message || MSG[d.error] || "Sign in failed. Please try again.";
+      err.style.display = "block";
+    }catch{
+      err.textContent = "Could not reach the server. Check your connection and try again.";
+      err.style.display = "block";
+    }finally{ btn.disabled = false; }
+  });
+  // Already signed in? Go straight in.
+  fetch("/api/me").then(r => r.ok ? r.json() : null).then(d => {
+    if(d && d.role) location.href = d.role === "admin" ? "/admin.html" : "/app.html";
+  }).catch(()=>{});
+</script>
+</body>
+</html>
