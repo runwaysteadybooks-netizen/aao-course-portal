@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Admin · FPSC Exam Portal</title>
+<script src="/assets/logo.js"></script>
+<style>
+  :root{--ink:#1C2B5A; --gold:#C2922A; --paper:#F6F5EF; --rule:#D9D4C7; --ok:#2E7D4F; --bad:#B3362B; --muted:#5a5f6e}
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+  header{background:var(--ink); color:#fff; padding:10px 16px; display:flex; align-items:center; gap:12px}
+  header img{width:34px; background:#fff; padding:2px; border-radius:4px}
+  header b{font-family:Georgia,serif; font-size:17px; flex:1}
+  header button{background:none; border:1px solid #58628a; color:#fff; padding:5px 12px; border-radius:4px; cursor:pointer}
+  main{max-width:960px; margin:0 auto; padding:18px 14px 60px}
+  h2{font-family:Georgia,serif; font-size:19px; margin:22px 0 10px}
+  .card{background:#fff; border:1px solid var(--rule); border-radius:6px; padding:16px 18px; margin-bottom:14px}
+  label{display:block; font-size:13px; font-weight:600; margin:10px 0 4px}
+  input{width:100%; padding:10px 11px; font-size:15px; border:1px solid #b9b4a6; border-radius:4px}
+  input:focus{outline:2px solid var(--gold); border-color:var(--gold)}
+  .row{display:flex; gap:12px; flex-wrap:wrap}
+  .row > div{flex:1; min-width:180px}
+  .btn{background:var(--ink); color:#fff; border:0; padding:10px 16px; border-radius:4px; font-size:14.5px; font-weight:600; cursor:pointer; margin-top:12px}
+  .btn.ghost{background:#fff; color:var(--ink); border:1px solid var(--ink)}
+  .btn:focus-visible{outline:3px solid var(--gold); outline-offset:2px}
+  .msg{margin-top:10px; font-size:14px; padding:9px 11px; display:none}
+  .msg.ok{display:block; background:#e9f3ec; border-left:3px solid var(--ok); color:#1d4f32}
+  .msg.err{display:block; background:#faeeec; border-left:3px solid var(--bad); color:#6d2018}
+  table{width:100%; border-collapse:collapse; background:#fff; border:1px solid var(--rule); font-size:13.5px}
+  th,td{padding:8px 9px; border-bottom:1px solid var(--rule); text-align:left; vertical-align:middle}
+  th{background:var(--paper); font-size:12px}
+  .pill{font-size:11.5px; padding:2px 8px; border-radius:10px; display:inline-block}
+  .on{background:#e4efe7; color:var(--ok)} .off{background:#faeeec; color:var(--bad)} .dev{background:#eef0ea; color:var(--muted)}
+  td .act{background:none; border:0; color:var(--ink); text-decoration:underline; cursor:pointer; font-size:12.5px; padding:2px 4px; white-space:nowrap}
+  .note{font-size:13px; color:var(--muted)}
+  .center{max-width:430px; margin:40px auto}
+  .checkline{display:flex; align-items:center; gap:8px; margin-top:12px; font-size:14px}
+  .checkline input{width:auto}
+  .tablewrap{overflow-x:auto}
+</style>
+</head>
+<body>
+<header>
+  <img id="logo" alt=""><b>FPSC Exam Portal — Admin</b>
+  <span id="hb"></span>
+</header>
+<main id="main"><p class="note">Loading…</p></main>
+<script>
+document.getElementById("logo").src = window.SCA_LOGO;
+const fav=document.createElement("link"); fav.rel="icon"; fav.href=window.SCA_LOGO; document.head.appendChild(fav);
+const M=document.getElementById("main");
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const api=async(p,body)=>{
+  const r=await fetch("/api"+p, body?{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}:{});
+  let d=null; try{d=await r.json()}catch{}
+  return {status:r.status, d};
+};
+function flash(id, ok, text){ const el=document.getElementById(id); el.className="msg "+(ok?"ok":"err"); el.textContent=text; }
+function genPassword(){
+  const chars="abcdefghjkmnpqrstuvwxyzACDEFHJKLMNPRTUVWXY2345679";
+  let p=""; const a=new Uint32Array(10); crypto.getRandomValues(a);
+  for(const v of a) p+=chars[v%chars.length];
+  return p;
+}
+
+/* ----- not signed in: show setup + sign-in pointer ----- */
+function viewLocked(isStudent){
+  M.innerHTML = `<div class="center">
+    ${isStudent? `<div class="card"><h2 style="margin-top:0">Admins only</h2>
+        <p class="note">This page is for the portal admin. <a href="/app.html">Go to the student portal</a>.</p></div>`
+    : `<div class="card">
+        <h2 style="margin-top:0">Sign in required</h2>
+        <p class="note">If the portal is already set up, <a href="/">sign in</a> with the admin account, then open this page again.</p>
+      </div>
+      <div class="card">
+        <h2 style="margin-top:0">First-time setup</h2>
+        <p class="note">Run this once. It creates the database tables, the admin account and the sample syllabus. You need the ADMIN_SETUP_KEY saved in Cloudflare.</p>
+        <label>Setup key</label><input id="s_key" autocomplete="off">
+        <label>Admin mobile number</label><input id="s_phone" value="03322466420">
+        <label>Admin name</label><input id="s_name" value="Ayaz">
+        <label>Admin password (min 8 characters)</label><input id="s_pass" type="text" autocomplete="off">
+        <button class="btn" onclick="runSetup()">Run setup</button>
+        <div class="msg" id="s_msg"></div>
+      </div>`}
+  </div>`;
+}
+async function runSetup(){
+  const {d}=await api("/setup",{key:val("s_key"),phone:val("s_phone"),name:val("s_name"),password:val("s_pass")});
+  if(d&&d.ok){ flash("s_msg",true,d.message+" Go to the sign-in page and log in."); }
+  else flash("s_msg",false,(d&&d.message)||"Setup failed.");
+}
+const val=id=>document.getElementById(id).value.trim();
+
+/* ----- admin dashboard ----- */
+let STUDENTS=[];
+async function dash(){
+  document.getElementById("hb").innerHTML=`<button onclick="signout()">Sign out</button>`;
+  const s=await api("/admin/settings");
+  M.innerHTML=`
+    <div class="card">
+      <h2 style="margin-top:0">Access window</h2>
+      <p class="note">Student access ends at the close of this date. Change it once FPSC announces the exact test date.</p>
+      <div class="row"><div><label>Expiry date (YYYY-MM-DD)</label><input id="exp" value="${esc(s.d.expiry_date)}"></div></div>
+      <button class="btn" onclick="saveExp()">Save date</button>
+      <div class="msg" id="exp_msg"></div>
+    </div>
+
+    <div class="card">
+      <h2 style="margin-top:0">Add a student</h2>
+      <div class="row">
+        <div><label>Mobile number</label><input id="n_phone" placeholder="03XXXXXXXXX"></div>
+        <div><label>Name</label><input id="n_name"></div>
+      </div>
+      <div class="row">
+        <div><label>Password</label><input id="n_pass" autocomplete="off"></div>
+        <div style="align-self:flex-end"><button class="btn ghost" style="margin-top:0" onclick="document.getElementById('n_pass').value=genPassword()">Generate</button></div>
+      </div>
+      <label>Note (optional — e.g. payment reference)</label><input id="n_note">
+      <div class="checkline"><input type="checkbox" id="n_paid" checked><label for="n_paid" style="margin:0">Payment received</label></div>
+      <button class="btn" onclick="addStudent()">Add student</button>
+      <div class="msg" id="n_msg"></div>
+      <p class="note" style="margin-bottom:0">After adding, send the student their number and password on WhatsApp. They can sign in on one device.</p>
+    </div>
+
+    <h2>Students</h2>
+    <div class="tablewrap"><table id="tbl"></table></div>`;
+  await loadStudents();
+}
+async function saveExp(){
+  const {d}=await api("/admin/settings",{expiry_date:val("exp")});
+  flash("exp_msg", !!(d&&d.ok), d&&d.ok ? "Saved." : (d&&d.message)||"Could not save.");
+}
+async function addStudent(){
+  const {d}=await api("/admin/students",{phone:val("n_phone"),name:val("n_name"),password:val("n_pass"),note:val("n_note"),paid:document.getElementById("n_paid").checked});
+  if(d&&d.ok){ flash("n_msg",true,"Student added. Password: "+val("n_pass")+" — copy it now; it is not shown again.");
+    ["n_phone","n_name","n_note"].forEach(i=>document.getElementById(i).value="");
+    document.getElementById("n_pass").value="";
+    await loadStudents();
+  } else flash("n_msg",false,(d&&d.message)||"Could not add student.");
+}
+async function loadStudents(){
+  const {d}=await api("/admin/students"); STUDENTS=d.students||[];
+  const t=document.getElementById("tbl");
+  t.innerHTML=`<tr><th>Phone</th><th>Name</th><th>Status</th><th>Paid</th><th>Device</th><th>Note</th><th>Actions</th></tr>`+
+    STUDENTS.map(u=>`<tr>
+      <td>${esc(u.phone)}${u.role==="admin"?' <span class="pill dev">admin</span>':""}</td>
+      <td>${esc(u.name)}</td>
+      <td><span class="pill ${u.active?"on":"off"}">${u.active?"active":"disabled"}</span></td>
+      <td><span class="pill ${u.paid?"on":"off"}">${u.paid?"paid":"unpaid"}</span></td>
+      <td>${u.role==="admin"?'<span class="note">—</span>':(u.has_device?'<span class="pill dev">linked</span>':'<span class="note">none</span>')}</td>
+      <td class="note">${esc(u.note||"")}</td>
+      <td>
+        <button class="act" onclick="setPass(${u.id})">set password</button>
+        ${u.role!=="admin"?`<button class="act" onclick="upd(${u.id},'toggle_active')">${u.active?"disable":"enable"}</button>
+        <button class="act" onclick="upd(${u.id},'toggle_paid')">${u.paid?"mark unpaid":"mark paid"}</button>
+        <button class="act" onclick="upd(${u.id},'reset_device')">reset device</button>`:""}
+        <button class="act" onclick="setNote(${u.id})">note</button>
+      </td></tr>`).join("");
+}
+async function upd(id, action, value){
+  const {d}=await api("/admin/student/update",{id,action,value});
+  if(!(d&&d.ok)) alert((d&&d.message)||"Update failed.");
+  await loadStudents();
+}
+function setPass(id){
+  const p=prompt("New password (min 8 characters). Tip: leave blank to auto-generate.");
+  if(p===null) return;
+  const pw=p.trim()||genPassword();
+  upd(id,"password",pw).then(()=>alert("New password: "+pw+"\nCopy it now and send it to the student."));
+}
+function setNote(id){
+  const u=STUDENTS.find(x=>x.id===id);
+  const n=prompt("Note for this student:", u&&u.note||"");
+  if(n!==null) upd(id,"note",n);
+}
+async function signout(){ await fetch("/api/logout",{method:"POST"}); location.href="/"; }
+
+(async function init(){
+  const {status,d}=await api("/me");
+  if(status!==200){ viewLocked(false); return; }
+  if(d.role!=="admin"){ viewLocked(true); return; }
+  dash();
+})();
+</script>
+</body>
+</html>
