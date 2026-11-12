@@ -77,6 +77,8 @@
   .note{font-size:13.5px; color:var(--muted)}
   .lockmsg{max-width:420px; margin:60px auto; background:#fff; border-top:4px solid var(--gold); padding:24px; text-align:center}
   .lockmsg a{color:var(--ink)}
+  .adminbar{background:#fff7e0; border-bottom:1px solid #e3cf95; padding:8px 16px; font-size:13.5px; display:none; align-items:center; gap:12px; flex-wrap:wrap}
+  .adminbar button{background:var(--ink); color:#fff; border:0; padding:5px 12px; border-radius:4px; cursor:pointer; font-size:13px}
   footer{text-align:center; font-size:12.5px; color:var(--muted); padding:20px 10px 30px}
   footer a{color:var(--ink)}
   .rev{border:1px solid var(--rule); border-radius:6px; padding:12px 14px; margin-bottom:10px; background:#fff; font-size:14px}
@@ -90,6 +92,10 @@
   <div class="ht"><b>FPSC Exam Portal</b><span>Simply Commerce Academy · Assistant Audit Officer (BS-17)</span></div>
   <div id="who"></div>
 </header>
+<div class="adminbar" id="adminbar">
+  <span><b>Admin preview.</b> You are seeing the portal as a student sees it. Your attempts here are not saved.</span>
+  <button onclick="location.href='/admin.html'">Back to admin panel</button>
+</div>
 <nav id="nav" style="display:none">
   <button data-v="syllabus" class="on">Syllabus &amp; practice</button>
   <button data-v="mock">Mock test</button>
@@ -328,6 +334,7 @@ document.getElementById("nav").addEventListener("click", e=>{
 (async function init(){
   try{
     ME = await api("/me");
+    if(ME.role==="admin") document.getElementById("adminbar").style.display="flex";
     document.getElementById("who").innerHTML = `${esc(ME.name)}<button onclick="signout()">Sign out</button>`;
     const c = await api("/content"); TOPICS = c.topics;
     await refreshProgress();

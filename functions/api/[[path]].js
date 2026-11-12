@@ -329,6 +329,7 @@ export async function onRequest(context) {
   }
   if (path === "/attempt" && method === "POST") {
     const g = await requireAccess(env, request); if (g.err) return g.err;
+    if (g.user.role === "admin") return json({ ok: true, preview: true }); // admin preview: nothing is saved
     const kind = body.kind === "mock" ? "mock" : "practice";
     const score = Math.max(0, Number(body.score) || 0);
     const total = Math.max(1, Number(body.total) || 1);

@@ -96,7 +96,7 @@ const val=id=>document.getElementById(id).value.trim();
 /* ----- admin dashboard ----- */
 let STUDENTS=[];
 async function dash(){
-  document.getElementById("hb").innerHTML=`<button onclick="signout()">Sign out</button>`;
+  document.getElementById("hb").innerHTML=`<button onclick="location.href='/app.html'" style="margin-right:8px">View as student</button><button onclick="signout()">Sign out</button>`;
   const s=await api("/admin/settings");
   M.innerHTML=`
     <div class="card">
