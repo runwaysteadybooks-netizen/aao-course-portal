@@ -71,8 +71,8 @@ function viewLocked(isStudent){
     ${isStudent? `<div class="card"><h2 style="margin-top:0">Admins only</h2>
         <p class="note">This page is for the portal admin. <a href="/app.html">Go to the student portal</a>.</p></div>`
     : `<div class="card">
-        <h2 style="margin-top:0">Sign in required</h2>
-        <p class="note">If the portal is already set up, <a href="/">sign in</a> with the admin account, then open this page again.</p>
+        <h2 style="margin-top:0">Login required</h2>
+        <p class="note">If the portal is already set up, <a href="/">log in</a> with the admin account, then open this page again.</p>
       </div>
       <div class="card">
         <h2 style="margin-top:0">First-time setup</h2>
@@ -96,7 +96,7 @@ const val=id=>document.getElementById(id).value.trim();
 /* ----- admin dashboard ----- */
 let STUDENTS=[];
 async function dash(){
-  document.getElementById("hb").innerHTML=`<button onclick="location.href='/app.html'" style="margin-right:8px">View as student</button><button onclick="signout()">Sign out</button>`;
+  document.getElementById("hb").innerHTML=`<button onclick="location.href='/app.html'" style="margin-right:8px">View as student</button><button onclick="signout()">Logout</button>`;
   const s=await api("/admin/settings");
   M.innerHTML=`
     <div class="card">
@@ -141,11 +141,11 @@ async function dash(){
         <div><label>Password</label><input id="n_pass" autocomplete="off"></div>
         <div style="align-self:flex-end"><button class="btn ghost" style="margin-top:0" onclick="document.getElementById('n_pass').value=genPassword()">Generate</button></div>
       </div>
-      <label>Note (optional — e.g. payment reference)</label><input id="n_note">
+      <label>Note (optional, e.g. Easypaisa/JazzCash transaction ID)</label><input id="n_note">
       <div class="checkline"><input type="checkbox" id="n_paid" checked><label for="n_paid" style="margin:0">Payment received</label></div>
       <button class="btn" onclick="addStudent()">Add student</button>
       <div class="msg" id="n_msg"></div>
-      <p class="note" style="margin-bottom:0">After adding, send the student their number and password on WhatsApp. They can sign in on one device.</p>
+      <p class="note" style="margin-bottom:0">After adding, send the student their number and password on WhatsApp. They can log in on one device.</p>
     </div>
 
     <h2>Students</h2>
@@ -201,7 +201,7 @@ async function importBank(){
   loadBankCount();
 }
 async function testAi(b){
-  b.disabled=true; b.textContent="Testing…"; flash("ai_msg",true,"Asking Gemini…");
+  b.disabled=true; b.textContent="Testing…"; flash("ai_msg",true,"Asking the AI…");
   const {d}=await api("/admin/ai-test",{});
   b.disabled=false; b.textContent="Test AI now";
   const el=document.getElementById("ai_msg");

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>Sign in · FPSC Exam Portal by Simply Commerce Academy</title>
+<title>Student Login · FPSC Exam Portal by Simply Commerce Academy</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800;900&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
@@ -69,6 +69,8 @@
   .err{display:none; margin-top:14px; padding:10px 12px; font-size:14px; background:#faeeec; border-left:3px solid var(--bad); color:#6d2018; border-radius:4px}
   .enrol{display:flex; align-items:center; justify-content:center; gap:9px; margin-top:14px; padding:11px; border-radius:8px; border:1px solid #bfe9cf; background:#effaf3; color:#14532d; font-weight:700; font-size:14.5px; text-decoration:none}
   .enrol i{color:var(--wa); font-size:20px} .enrol:hover{background:#e3f6ea}
+  .grp{display:flex; align-items:center; justify-content:center; gap:9px; margin-top:10px; padding:10px; border-radius:8px; border:1px solid var(--line); background:#fff; color:var(--ink); font-weight:700; font-size:14px; text-decoration:none}
+  .grp i{color:var(--wa); font-size:18px} .grp:hover{border-color:#cfc6ae; background:#fbf9f3}
 
   /* ---------- sections ---------- */
   section.s{padding:56px 0 8px}
@@ -188,15 +190,16 @@
         </div>
       </div>
       <form class="card" id="f" autocomplete="off">
-        <h3>Sign in</h3>
-        <p class="sub">Use the mobile number and password we sent you.</p>
+        <h3>Student Login</h3>
+        <p class="sub">Use the mobile number and password sent to you on WhatsApp.</p>
         <label for="phone">Mobile number</label>
         <div class="field"><i class="fa-solid fa-mobile-screen"></i><input id="phone" inputmode="tel" placeholder="03XX XXXXXXX" required></div>
         <label for="password">Password</label>
         <div class="field"><i class="fa-solid fa-lock"></i><input id="password" type="password" autocomplete="current-password" required><button type="button" class="eye" id="eye" aria-label="Show password" aria-pressed="false"><i class="fa-regular fa-eye"></i></button></div>
-        <button class="btn" id="btn" type="submit">Sign in</button>
+        <button class="btn" id="btn" type="submit">Login</button>
         <div class="err" id="err" role="alert"></div>
-        <a class="enrol" href="https://wa.me/923322466420" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i>New here? Enrol on WhatsApp</a>
+        <a class="enrol" href="https://wa.me/923322466420" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i>New here? Register on WhatsApp</a>
+        <a class="grp" href="https://chat.whatsapp.com/DHuiEufRVF46P1rHkoLmOq" target="_blank" rel="noopener"><i class="fa-solid fa-users"></i>Join our WhatsApp group</a>
       </form>
     </div>
   </div>
@@ -215,7 +218,7 @@
     <div class="two">
       <div class="panel">
         <h3>Minimum qualification</h3>
-        <div class="opt"><em>OPTION A</em><br>Second-class Master's in Business Administration (Finance/Accounting), Economics, Commerce, Mathematics or Statistics.</div>
+        <div class="opt"><em>OPTION A</em><br>2nd Class Master's degree in Business Administration (Finance/Accounting), Economics, Commerce, Mathematics or Statistics.</div>
         <div class="opt"><em>OPTION B</em><br>Master's degree plus ICMA (one-year post-graduate), CA (Foundation) or ACCA (Knowledge level).</div>
         <div class="opt"><em>OPTION C</em><br>Bachelor's degree with PIPFA (Public Sector) or SAS, plus 3 years' service in the relevant field.</div>
       </div>
@@ -288,7 +291,7 @@
       </div>
       <div class="wa-card">
         <i class="fa-brands fa-whatsapp"></i>
-        <small>For registration, WhatsApp</small>
+        <small>Register on WhatsApp</small>
         <div class="num">0332-2466420</div>
         <a class="wa-btn" href="https://wa.me/923322466420" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i>Chat on WhatsApp</a>
         <a class="wa-grp" href="https://chat.whatsapp.com/DHuiEufRVF46P1rHkoLmOq" target="_blank" rel="noopener">Join our WhatsApp group</a>
@@ -373,7 +376,7 @@
         body: JSON.stringify({ phone: document.getElementById("phone").value, password: document.getElementById("password").value, device_id: deviceId() }) });
       const d = await r.json();
       if(d.ok){ location.href = d.role === "admin" ? "/admin.html" : "/app.html"; return; }
-      err.textContent = d.message || MSG[d.error] || "Sign in failed. Please try again.";
+      err.textContent = d.message || MSG[d.error] || "Login failed. Please try again.";
       err.style.display = "block";
     }catch{
       err.textContent = "Could not reach the server. Check your connection and try again.";

@@ -1,6 +1,6 @@
 # FPSC Exam Portal — Simply Commerce Academy
 
-Paid prep portal for the FPSC **Assistant Audit Officer (BS-17)** test (Office of the Auditor-General of Pakistan). Students sign in with a phone number and a password issued by the admin, on one device, until the access expiry date.
+Paid prep portal for the FPSC **Assistant Audit Officer (BS-17)** test (Office of the Auditor-General of Pakistan). Students log in with a mobile number and a password issued by the admin, on one device, until the access expiry date.
 
 Live on Cloudflare Pages: production deploys from `main`, previews from every other branch.
 
@@ -18,7 +18,7 @@ Live on Cloudflare Pages: production deploys from `main`, previews from every ot
 1. Open `/admin.html` on the deployed site.
 2. Fill the "First-time setup" card: setup key, admin number `03322466420`, a strong admin password.
 3. This creates the tables, the admin account, the default expiry (2027-01-31) and the SAMPLE syllabus + MCQs.
-4. Sign in at `/` with the admin number and password.
+4. Log in at `/` with the admin number and password.
 
 ## Daily operation
 - Student pays on WhatsApp (Easypaisa or JazzCash) → admin adds them in `/admin.html` (Generate password) → send number + password on WhatsApp.
@@ -42,3 +42,7 @@ Cloudflare Workers AI (free daily allowance, resets 5:00 AM PKT). The best avail
 - `assets/logo.js` — temporary logo (replace with the original export)
 - `functions/api/[[path]].js` — API
 - `tools/PortalSync.gs` — Google Apps Script for the question-bank doc (set `SYNC_KEY` inside it)
+
+## Content rules
+- Users are Pakistani: write in standard Pakistani English (as in FPSC/PPSC notices and Pakistani textbooks), not American or British idiom.
+- MCQs follow the pattern of Pakistani testing bodies (FPSC, PPSC, SPSC and similar): four options (A)–(D), Pakistani context, amounts in Rs., Pakistani laws and institutions. No US or UK-sourced questions.

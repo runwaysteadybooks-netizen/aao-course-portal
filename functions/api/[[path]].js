@@ -145,12 +145,12 @@ const SCHEMA = [
 
 const S = "SAMPLE NOTES — replace with your own material before launch.\n\n";
 const TOPICS = [
-  ["I", "English", "Vocabulary", S + "Build exam vocabulary in themes: synonyms, antonyms, one-word substitutes and commonly confused pairs (affect/effect, principal/principle). Practise 20 words a day and revise with the MCQs here."],
+  ["I", "English", "Vocabulary", S + "Build exam vocabulary in themes: synonyms, antonyms, one-word substitutes and commonly confused pairs (affect/effect, principal/principle). Practice 20 words a day and revise with the MCQs here."],
   ["I", "English", "Grammar Usage", S + "High-yield rules: subject–verb agreement (either/neither take singular), tense consistency, prepositions after common verbs, articles, and pronoun agreement. Most paper questions test agreement and prepositions."],
   ["I", "English", "Sentence Structuring", S + "Spot the correctly built sentence: watch for dangling modifiers, parallel structure (not only…but also), misplaced clauses and run-ons. Read each option aloud in your head; the wrong ones usually break parallelism."],
   ["II", "Accounting", "Financial Accounting: Cycle to Final Accounts", S + "The accounting cycle: transaction → journal → ledger → trial balance → adjustments → adjusted trial balance → financial statements → closing entries. Know adjusting entries (accruals, prepayments, depreciation, bad debts) and the format of final accounts."],
   ["II", "Accounting", "Partnership & Company Accounts", S + "Partnership: profit-sharing in the absence of an agreement, interest on capital/drawings, admission and retirement, goodwill valuation (average profit and super profit methods). Company: share issue, forfeiture, and valuation of shares."],
-  ["II", "Accounting", "Financial Statement Analysis & Ratios", S + "Liquidity (current, quick), profitability (gross/net margin, ROE), solvency (debt-equity, interest cover) and activity ratios (inventory and receivable turnover). Practise computing from a small balance sheet and reading what the number means."],
+  ["II", "Accounting", "Financial Statement Analysis & Ratios", S + "Liquidity (current, quick), profitability (gross/net margin, ROE), solvency (debt-equity, interest cover) and activity ratios (inventory and receivable turnover). Practice computing from a small balance sheet and reading what the number means."],
   ["II", "Accounting", "Cost & Management Accounting", S + "Cost classification, prime cost and conversion cost, overhead absorption, marginal vs absorption costing, CVP and break-even, standard costing and variances, budgets and budgetary control."],
   ["II", "Auditing", "Auditing: Scope, Objectives, Evidence & Working Papers", S + "Objective of an external audit, types of audit, audit programme, sufficiency (quantity) vs appropriateness (quality) of evidence, and working papers: purpose, ownership and retention."],
   ["II", "Auditing", "Internal Controls, Fraud & IT Audit", S + "Components of internal control, segregation of duties, control testing vs substantive testing, the auditor's responsibilities for fraud, investigation of accounts, and computer-assisted audit techniques (CAATs)."],
@@ -228,7 +228,7 @@ async function runSetup(env, body) {
         .bind(rows[q[0]].id, q[1], q[2], q[3], q[4], q[5], q[6], q[7]));
     await env.DB.batch(qs);
   }
-  return json({ ok: true, message: "Setup complete. You can now sign in as admin." });
+  return json({ ok: true, message: "Setup complete. You can now log in as admin." });
 }
 
 /* ---------- login ---------- */
@@ -400,7 +400,7 @@ Question: ${q.question}
 ${letters.map(k => `${k.toUpperCase()}) ${q[k]}`).join("\n")}
 Correct answer: ${q.correct.toUpperCase()}) ${q[q.correct]}
 
-Write ONE tight paragraph of 80 to 120 words in simple English that explains why the correct answer is right. Include one or two short, concrete examples (use Pakistani context and rupee amounts where natural). If students commonly confuse this with one of the other options, say why in one sentence. No headings, no bullet points, no markdown, no greeting.
+Write ONE tight paragraph of 80 to 120 words that explains why the correct answer is right. Use simple, standard Pakistani English, the way FPSC/PPSC papers and Pakistani textbooks write it: not American or British idiom. Include one or two short, concrete examples set in Pakistan: Pakistani names, cities, businesses and amounts in Rs., and Pakistani laws and institutions where relevant (for example the Companies Act 2017, Income Tax Ordinance 2001, PFM Act 2019, SECP, FBR, the Auditor-General of Pakistan). Never use US or UK examples, currencies, laws or bodies (no dollars, pounds, IRS, HMRC or US GAAP). If students commonly confuse this with one of the other options, say why in one sentence. No headings, no bullet points, no markdown, no greeting.
 Then translate that paragraph into clear, simple Urdu in Urdu script. Keep standard accounting or legal terms in English inside brackets where that helps.
 Respond with JSON only: {"en": "<English paragraph>", "ur": "<Urdu paragraph>"}`;
 }
@@ -479,7 +479,7 @@ Question: ${q.question}
 ${letters.map(k => `${k.toUpperCase()}) ${q[k]}`).join("\n")}
 Correct answer: ${q.correct.toUpperCase()}) ${q[q.correct]}
 
-Write ONE tight paragraph of 80 to 120 words in simple English that explains why the correct answer is right. Include one or two short, concrete examples (use Pakistani context and rupee amounts where natural). If students commonly confuse this with one of the other options, say why in one sentence. No headings, no bullet points, no markdown, no greeting.
+Write ONE tight paragraph of 80 to 120 words that explains why the correct answer is right. Use simple, standard Pakistani English, the way FPSC/PPSC papers and Pakistani textbooks write it: not American or British idiom. Include one or two short, concrete examples set in Pakistan: Pakistani names, cities, businesses and amounts in Rs., and Pakistani laws and institutions where relevant (for example the Companies Act 2017, Income Tax Ordinance 2001, PFM Act 2019, SECP, FBR, the Auditor-General of Pakistan). Never use US or UK examples, currencies, laws or bodies (no dollars, pounds, IRS, HMRC or US GAAP). If students commonly confuse this with one of the other options, say why in one sentence. No headings, no bullet points, no markdown, no greeting.
 Then translate that paragraph into clear, simple Urdu in Urdu script. Keep standard accounting or legal terms in English inside brackets where that helps.
 Respond with JSON only: {"en": "<English paragraph>", "ur": "<Urdu paragraph>"}`;
 

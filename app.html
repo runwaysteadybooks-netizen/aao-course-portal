@@ -294,7 +294,7 @@ function locked(d){
     <h2>${d.error==="expired"?"Access has ended":"Account not active"}</h2>
     <p class="note">${d.error==="expired" ? "Portal access for this exam cycle ended on "+d.expiry+"." : "Your account has been deactivated."}
       <br>Message us on WhatsApp if you think this is a mistake.</p>
-    <button class="btn" onclick="signout()">Sign out</button></div>`;
+    <button class="btn" onclick="signout()">Logout</button></div>`;
 }
 async function signout(){ await fetch("/api/logout",{method:"POST"}); location.href="/"; }
 function esc(s){ return String(s??"").replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
@@ -345,12 +345,12 @@ function viewSyllabus(){
   const daysLeft = Math.ceil((new Date("2027-01-02T00:00:00") - pk) / 86400000);
   let h = `<div class="summary">
     <div class="stat"><b>${total}</b><span>MCQs in the bank</span></div>
-    <div class="stat"><b>${practised}/${TOPICS.length}</b><span>Topics practised</span></div>
+    <div class="stat"><b>${practised}/${TOPICS.length}</b><span>Topics practiced</span></div>
     <div class="stat"><b>${bestMock}</b><span>Best mock score</span></div>
     ${daysLeft>0?`<div class="stat sun"><b>${daysLeft}</b><span>Days to the written test</span></div>`:""}</div>
     <div class="method">
-      <button onclick="openTopic(TOPICS[0].id)"><small>STEP 1</small><b>Learn</b><span>View MCQs topic by topic, with AI explanations</span></button>
-      <button onclick="document.querySelector('.tcard .b.primary').scrollIntoView({behavior:'smooth',block:'center'})"><small>STEP 2</small><b>Practise</b><span>20 questions at a time, Correct or Wrong instantly</span></button>
+      <button onclick="show('bank')"><small>STEP 1</small><b>Learn</b><span>Study the question bank, with AI explanations</span></button>
+      <button onclick="document.querySelector('.tcard .b.primary').scrollIntoView({behavior:'smooth',block:'center'})"><small>STEP 2</small><b>Practice</b><span>20 questions at a time, with instant Correct or Wrong</span></button>
       <button onclick="show('mock')"><small>STEP 3</small><b>Test</b><span>Full 100-MCQ timed mock on the paper pattern</span></button>
       <button onclick="show('progress')"><small>STEP 4</small><b>Revise</b><span>My progress shows your weakest topics</span></button>
     </div>
@@ -373,11 +373,10 @@ function viewSyllabus(){
         const b = bestFor(t.id);
         h += `<div class="tcard">
           <h3>${esc(t.title)}</h3>
-          <div class="meta"><span class="chip">${t.n} MCQs</span><span class="chip ${b!==null?"done":""}">${b!==null?"Best "+b+"%":"Not practised"}</span></div>
+          <div class="meta"><span class="chip">${t.n} MCQs</span><span class="chip ${b!==null?"done":""}">${b!==null?"Best "+b+"%":"Not practiced"}</span></div>
           <div class="meter"><i style="width:${b||0}%"></i></div>
           <div class="tact">
-            <button class="b primary" onclick="startPractice(${t.id})">Practise</button>
-            <button class="b ghost" onclick="openTopic(${t.id})">View MCQs</button>
+            <button class="b primary" onclick="startPractice(${t.id})">Practice</button>
             ${t.has_notes?`<button class="b ghost" onclick="openNotes(${t.id})">Notes</button>`:""}
           </div></div>`;
       }
@@ -391,7 +390,7 @@ async function openNotes(id){
   M.innerHTML = `<button class="back" onclick="show('syllabus')">&larr; Back to syllabus</button>
     <div class="paper"><h2>${esc(d.topic.title)}</h2><p class="marks">Part-${d.topic.part} · ${esc(d.topic.section)}</p>
     <div class="notes">${esc(d.topic.notes)}</div>
-    <div class="bar"><span></span><button class="btn" onclick="startPractice(${d.topic.id})">Practise this topic</button></div></div>`;
+    <div class="bar"><span></span><button class="btn" onclick="startPractice(${d.topic.id})">Practice this topic</button></div></div>`;
   window.scrollTo(0,0);
 }
 
@@ -492,32 +491,6 @@ async function viewBank(){
     <div class="print-key" id="pkey"></div></div>`;
 }
 
-/* one topic, clean single-column view (from "View MCQs" on the syllabus) */
-function openTopic(id){
-  TV.id = id; TV.self = false;
-  document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on", b.dataset.v==="syllabus"));
-  viewTopic(); window.scrollTo(0,0);
-}
-function setTopicSelf(v){ TV.self = v; viewTopic(); }
-async function viewTopic(){
-  M.classList.remove("wide");
-  const t = TOPICS.find(x=>x.id===TV.id); if(!t){ show("syllabus"); return; }
-  M.innerHTML = `<button class="back" onclick="show('syllabus')">&larr; Back to syllabus</button><p class="note">Loading questions…</p>`;
-  const d = await api("/bank?topic_id="+t.id);
-  const qs = d.questions;
-  M.innerHTML = `<button class="back" onclick="show('syllabus')">&larr; Back to syllabus</button>
-    <div id="qbw" class="${TV.self?"self":""}" data-title="${esc(t.title)}" data-count="${qs.length}">
-      <div class="print-head" id="phead"></div>
-      <div class="tv-head">
-        <div class="tv-kicker">Part-${t.part} · ${esc(t.section)}</div>
-        <h2>${esc(t.title)}</h2>
-        <div class="tv-bar"><span class="note">${qs.length} MCQs · ${TV.self?"Pick an answer to check yourself.":"Correct answers are marked in green."}</span>
-          <div class="tools-r">${modeToggle(TV.self,"setTopicSelf")}${printBtn}<button class="b primary" onclick="startPractice(${t.id})">Practise</button></div></div>
-      </div>
-      ${qs.length?`<div class="tv-list">${qs.map((q,i)=>qCard(q,i+1,TV.self)).join("")}</div>`:`<p class="note">No questions in this topic yet.</p>`}
-      <div class="print-key" id="pkey"></div>
-    </div>`;
-}
 function pickBank(btn){
   const card = btn.closest(".qb-card");
   if(!card.closest(".self") || card.classList.contains("done")) return;
@@ -597,7 +570,7 @@ function viewProgress(){
   const tops = PROG.byTopic.map(b=>`<tr><td>${esc(topicName(b.topic_id))}</td><td class="r">${b.attempts}</td><td class="r">${b.best}%</td></tr>`).join("");
   M.innerHTML = `<h2>Recent attempts</h2>
     ${rows?`<div class="tablewrap"><table><tr><th>Type</th><th>Topic</th><th class="r">Score</th><th class="r">%</th><th class="r">Date</th></tr>${rows}</table></div>`
-      :`<p class="note">Nothing attempted yet. Pick a topic on the syllabus tab and practise it.</p>`}
+      :`<p class="note">Nothing attempted yet. Pick a topic on the Syllabus tab and practice it.</p>`}
     <h2 style="margin-top:24px">By topic</h2>
     ${tops?`<div class="tablewrap"><table><tr><th>Topic</th><th class="r">Attempts</th><th class="r">Best</th></tr>${tops}</table></div>`
       :`<p class="note">Topic scores appear here after your first practice.</p>`}`;
@@ -616,7 +589,7 @@ document.getElementById("nav").addEventListener("click", e=>{ const b=e.target.c
   try{
     ME = await api("/me");
     if(ME.role==="admin") document.getElementById("adminbar").style.display="flex";
-    document.getElementById("who").innerHTML = `<span class="nm">${esc(ME.name)}</span><button onclick="signout()">Sign out</button>`;
+    document.getElementById("who").innerHTML = `<span class="nm">${esc(ME.name)}</span><button onclick="signout()">Logout</button>`;
     const c = await api("/content"); TOPICS = c.topics;
     await refreshProgress();
     document.getElementById("nav").style.display="flex";
