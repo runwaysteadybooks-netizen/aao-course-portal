@@ -110,9 +110,9 @@ async function dash(){
     <div class="card">
       <h2 style="margin-top:0">AI explanations</h2>
       <p class="note" style="margin:0">${s.d.ai_on
-        ? `Switched on (free tier). The portal picks the newest free Gemini Flash model and moves down to the next one if a model is unavailable or out of free quota.<br>
+        ? `Switched on. Explanations come from Cloudflare Workers AI (free daily allowance, resets 5:00 AM Pakistan time); the best available model is tried first. Each question is explained once and saved.<br>
            Last model used: <b>${esc(s.d.ai_last_model||"none yet")}</b> · Explanations saved: <b>${s.d.ai_cached}</b>`
-        : `Switched off. Add a secret named GEMINI_API_KEY in Cloudflare (Settings → Variables and secrets → Production) to turn it on.`}</p>
+        : `Switched off. In Cloudflare: Settings → Bindings (Production) → Add → Workers AI, variable name AI. Then redeploy.`}</p>
       <button class="btn ghost" onclick="testAi(this)">Test AI now</button>
       <div class="msg" id="ai_msg"></div>
     </div>
@@ -207,9 +207,8 @@ async function testAi(b){
   const el=document.getElementById("ai_msg");
   el.className="msg "+(d&&d.ok?"ok":"err");
   el.innerHTML = d&&d.ok
-    ? `Working. Answered by <b>${esc(d.model)}</b>.<br><i>${esc(d.sample)}…</i>`
+    ? `Working. Answered by <b>${esc(d.model)}</b>.<br><i>${esc(d.sample)}…</i>${d.sample_ur?`<br><span dir="rtl" lang="ur" style="font-size:15px">${esc(d.sample_ur)}…</span>`:""}`
     : `Not working yet. What Google said:<br>${((d&&d.trail)||["No response from the server."]).map(t=>"• "+esc(t)).join("<br>")}`;
-  if(d&&d.models&&d.models.length) el.innerHTML += `<br><span style="font-size:12px">Free models found, best first: ${d.models.map(esc).join(", ")}</span>`;
 }
 async function saveExp(){
   const {d}=await api("/admin/settings",{expiry_date:val("exp")});

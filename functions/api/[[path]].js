@@ -392,6 +392,84 @@ async function candidateModels(env) {
   return ready.length ? ready : unique;
 }
 
+function explainPrompt(q) {
+  const letters = ["a", "b", "c", "d"];
+  return `You are a tutor for candidates in Pakistan preparing for the FPSC Assistant Audit Officer (BS-17) test.
+
+Question: ${q.question}
+${letters.map(k => `${k.toUpperCase()}) ${q[k]}`).join("\n")}
+Correct answer: ${q.correct.toUpperCase()}) ${q[q.correct]}
+
+Write ONE tight paragraph of 80 to 120 words in simple English that explains why the correct answer is right. Include one or two short, concrete examples (use Pakistani context and rupee amounts where natural). If students commonly confuse this with one of the other options, say why in one sentence. No headings, no bullet points, no markdown, no greeting.
+Then translate that paragraph into clear, simple Urdu in Urdu script. Keep standard accounting or legal terms in English inside brackets where that helps.
+Respond with JSON only: {"en": "<English paragraph>", "ur": "<Urdu paragraph>"}`;
+}
+function pickJson(text) {
+  const t = String(text || "").replace(/```json|```/g, "");
+  const a = t.indexOf("{"), b = t.lastIndexOf("}");
+  if (a < 0 || b <= a) return null;
+  try {
+    const o = JSON.parse(t.slice(a, b + 1));
+    if (typeof o.en === "string" && typeof o.ur === "string" && o.en.trim() && o.ur.trim()) return { en: o.en.trim(), ur: o.ur.trim() };
+  } catch {}
+  return null;
+}
+function textFromWorkersAi(r) {
+  if (!r) return "";
+  if (typeof r === "string") return r;
+  if (typeof r.response === "string") return r.response;
+  if (r.response && typeof r.response === "object") return JSON.stringify(r.response);
+  const ch = r.choices && r.choices[0];
+  if (ch && ch.message && typeof ch.message.content === "string") return ch.message.content;
+  if (typeof r.output_text === "string") return r.output_text;
+  if (Array.isArray(r.output)) // Responses-style output (used by some models)
+    return r.output.filter(o => o && o.type === "message").flatMap(o => o.content || []).map(c => c.text || "").join("");
+  return "";
+}
+// Cloudflare Workers AI: free daily allowance on the Workers Free plan, no key needed (binding "AI").
+// Best model first; moves down the list if a model is missing, fails, or returns an unusable answer.
+const CF_MODELS = ["@cf/openai/gpt-oss-120b", "@cf/meta/llama-3.3-70b-instruct-fp8-fast", "@cf/google/gemma-3-12b-it", "@cf/openai/gpt-oss-20b", "@cf/meta/llama-3.1-8b-instruct"];
+async function askWorkersAi(env, q) {
+  const prompt = explainPrompt(q), trail = [];
+  let quota = false;
+  const models = [env.CF_AI_MODEL, ...CF_MODELS].filter(Boolean);
+  for (const model of [...new Set(models)]) {
+    for (const input of [
+      { messages: [{ role: "system", content: "You reply with JSON only." }, { role: "user", content: prompt }], max_tokens: 1500, temperature: 0.4 },
+      { instructions: "You reply with JSON only.", input: prompt },
+    ]) {
+      try {
+        const out = pickJson(textFromWorkersAi(await env.AI.run(model, input)));
+        if (out) return { ...out, model: "workers-ai " + model, trail };
+        trail.push(`${model}: answer not usable`);
+        break; // the model answered; a different input shape will not help
+      } catch (e) {
+        const msg = String((e && e.message) || e).slice(0, 200);
+        if (/neuron|allocation|quota|daily|4006|429|rate limit/i.test(msg)) { quota = true; trail.push(`${model}: ${msg}`); break; }
+        trail.push(`${model}: ${msg}`);
+        if (/not found|no such model|unknown model|5007|does not exist/i.test(msg)) break; // try next model
+      }
+    }
+    if (quota) break; // the daily allowance is shared by all models
+  }
+  return { status: quota ? 429 : 502, quota, trail };
+}
+async function explainWithAi(env, q) {
+  const trail = [];
+  if (env.AI) {
+    const w = await askWorkersAi(env, q);
+    if (w.en) return w;
+    trail.push(...w.trail);
+    if (!env.GEMINI_API_KEY) return { status: w.status, quota: w.quota, trail };
+  }
+  if (env.GEMINI_API_KEY) {
+    const g = await askGemini(env, q);
+    if (g.en) return { ...g, model: "gemini " + g.model };
+    return { status: g.status, trail: [...trail, ...(g.trail || [])] };
+  }
+  return { status: 503, trail: ["No AI is connected (no Workers AI binding and no Gemini key)."] };
+}
+
 async function askGemini(env, q) {
   const letters = ["a", "b", "c", "d"];
   const prompt =
@@ -531,11 +609,12 @@ export async function onRequest(context) {
     await env.DB.prepare(AI_TABLE).run();
     const cached = await env.DB.prepare("SELECT en, ur FROM ai_explanations WHERE mcq_id = ?").bind(id).first();
     if (cached) return json({ ok: true, en: cached.en, ur: cached.ur });
-    if (!env.GEMINI_API_KEY) return json({ error: "ai_off", message: "AI explanations are not switched on yet." }, 503);
+    if (!env.AI && !env.GEMINI_API_KEY) return json({ error: "ai_off", message: "AI explanations are not switched on yet." }, 503);
     const q = await env.DB.prepare("SELECT question, a, b, c, d, correct FROM mcqs WHERE id = ?").bind(id).first();
     if (!q) return json({ error: "not_found" }, 404);
-    const out = await askGemini(env, q);
+    const out = await explainWithAi(env, q);
     const detail = g.user.role === "admin" ? { detail: out.trail } : {};
+    if (out.quota) return json({ error: "busy", message: "Today's free AI allowance has been used up. It resets at 5:00 AM Pakistan time.", ...detail }, 429);
     if (out.status === 429) return json({ error: "busy", message: "The AI is busy right now. Please try again in a minute.", ...detail }, 429);
     if (!out.en) return json({ error: "ai_failed", message: "The AI could not explain this one right now. Please try again shortly.", ...detail }, 502);
     await env.DB.batch([
@@ -662,11 +741,11 @@ export async function onRequest(context) {
   }
   if (path === "/admin/ai-test" && method === "POST") {
     const g = await requireAdmin(env, request); if (g.err) return g.err;
-    if (!env.GEMINI_API_KEY) return json({ ok: false, trail: ["GEMINI_API_KEY is not set for this deployment (Production)."] });
+    if (!env.AI && !env.GEMINI_API_KEY) return json({ ok: false, trail: ["No AI is connected to this deployment yet. Add the Workers AI binding named AI (Settings → Bindings, Production), then redeploy."] });
     for (const k of Object.keys(COOLDOWN)) delete COOLDOWN[k];
     MODEL_CACHE.list = null;
-    const out = await askGemini(env, { question: "Which account is credited when goods are sold for cash?", a: "Cash account", b: "Sales account", c: "Purchases account", d: "Capital account", correct: "b" });
-    return json({ ok: !!out.en, model: out.model || null, sample: out.en ? out.en.slice(0, 160) : null, models: MODEL_CACHE.list || [], trail: out.trail || [] });
+    const out = await explainWithAi(env, { question: "Which account is credited when goods are sold for cash?", a: "Cash account", b: "Sales account", c: "Purchases account", d: "Capital account", correct: "b" });
+    return json({ ok: !!out.en, model: out.model || null, sample: out.en ? out.en.slice(0, 160) : null, sample_ur: out.ur ? out.ur.slice(0, 120) : null, models: [], trail: out.trail || [] });
   }
   if (path === "/admin/settings" && method === "GET") {
     const g = await requireAdmin(env, request); if (g.err) return g.err;
@@ -674,7 +753,7 @@ export async function onRequest(context) {
     const cachedAi = await env.DB.prepare("SELECT COUNT(*) AS n FROM ai_explanations").first();
     return json({
       expiry_date: await getSetting(env, "expiry_date", "2027-01-31"),
-      ai_on: !!env.GEMINI_API_KEY,
+      ai_on: !!(env.AI || env.GEMINI_API_KEY),
       ai_last_model: await getSetting(env, "ai_last_model", null),
       ai_cached: cachedAi ? cachedAi.n : 0,
     });
