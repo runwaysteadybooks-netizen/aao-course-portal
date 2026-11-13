@@ -108,7 +108,22 @@ async function dash(){
     </div>
 
     <div class="card">
-      <h2 style="margin-top:0">Question bank</h2>
+      <h2 style="margin-top:0">AI explanations</h2>
+      <p class="note" style="margin:0">${s.d.ai_on
+        ? `Switched on (free tier). The portal picks the newest free Gemini Flash model and moves down to the next one if a model is unavailable or out of free quota.<br>
+           Last model used: <b>${esc(s.d.ai_last_model||"none yet")}</b> · Explanations saved: <b>${s.d.ai_cached}</b>`
+        : `Switched off. Add a secret named GEMINI_API_KEY in Cloudflare (Settings → Variables and secrets → Production) to turn it on.`}</p>
+      <button class="btn ghost" onclick="testAi(this)">Test AI now</button>
+      <div class="msg" id="ai_msg"></div>
+    </div>
+
+    <div class="card">
+      <h2 style="margin-top:0">Google Doc sync</h2>
+      <div id="doc_status" class="note">Checking…</div>
+    </div>
+
+    <div class="card">
+      <h2 style="margin-top:0">Manual file import (optional)</h2>
       <p class="note" id="qb_count">Counting questions…</p>
       <label>Import file (.json)</label><input type="file" id="qb_file" accept=".json,application/json">
       <button class="btn" onclick="importBank()">Replace question bank</button>
@@ -137,6 +152,22 @@ async function dash(){
     <div class="tablewrap"><table id="tbl"></table></div>`;
   await loadStudents();
   loadBankCount();
+  loadDocStatus();
+}
+async function loadDocStatus(){
+  const {d}=await api("/admin/doc");
+  const el=document.getElementById("doc_status");
+  if(!d){ el.textContent="Could not load the sync status."; return; }
+  if(!d.key_set){ el.innerHTML="Not connected yet. Add a secret named <b>DOC_SYNC_KEY</b> in Cloudflare, then set up the script in your Google Doc."; return; }
+  const r=d.report;
+  if(!r){ el.innerHTML="Ready. Waiting for the first sync from your Google Doc (Portal menu → Sync questions now)."; return; }
+  const when=new Date(r.at).toLocaleString();
+  let h=`Last sync: <b>${esc(when)}</b> · <b>${r.saved}</b> questions live in the portal.`;
+  if(r.topics&&r.topics.length) h+=`<table style="margin-top:10px"><tr><th>Subject</th><th>Group</th><th style="text-align:right">MCQs</th></tr>${r.topics.map(t=>`<tr><td>${esc(t.title)}</td><td>${esc(t.section)}</td><td style="text-align:right">${t.n}</td></tr>`).join("")}</table>`;
+  if(r.problems&&r.problems.length) h+=`<div class="msg err" style="display:block">Skipped (fix these in the doc):<br>${r.problems.map(p=>"• Q"+p.q+": "+esc(p.reason)).join("<br>")}</div>`;
+  if(r.duplicates&&r.duplicates.length) h+=`<p class="note">Exact duplicates ignored: Q${r.duplicates.join(", Q")}</p>`;
+  if(r.missingNumbers&&r.missingNumbers.length) h+=`<p class="note">Question numbers not found in the doc: Q${r.missingNumbers.join(", Q")}</p>`;
+  el.innerHTML=h;
 }
 async function loadBankCount(){
   const {d}=await api("/content");
@@ -168,6 +199,17 @@ async function importBank(){
   flash("qb_msg",true,`Done. Imported ${done} MCQs into ${data.topics.length} topics.`);
   document.getElementById("qb_file").value="";
   loadBankCount();
+}
+async function testAi(b){
+  b.disabled=true; b.textContent="Testing…"; flash("ai_msg",true,"Asking Gemini…");
+  const {d}=await api("/admin/ai-test",{});
+  b.disabled=false; b.textContent="Test AI now";
+  const el=document.getElementById("ai_msg");
+  el.className="msg "+(d&&d.ok?"ok":"err");
+  el.innerHTML = d&&d.ok
+    ? `Working. Answered by <b>${esc(d.model)}</b>.<br><i>${esc(d.sample)}…</i>`
+    : `Not working yet. What Google said:<br>${((d&&d.trail)||["No response from the server."]).map(t=>"• "+esc(t)).join("<br>")}`;
+  if(d&&d.models&&d.models.length) el.innerHTML += `<br><span style="font-size:12px">Free models found, best first: ${d.models.map(esc).join(", ")}</span>`;
 }
 async function saveExp(){
   const {d}=await api("/admin/settings",{expiry_date:val("exp")});

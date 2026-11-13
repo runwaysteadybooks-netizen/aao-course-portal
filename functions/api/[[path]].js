@@ -271,9 +271,126 @@ async function handleLogin(env, body) {
   return json({ ok: true, role: user.role, name: user.name }, 200, setCookie(token));
 }
 
+/* ---------- Google Doc question bank (live sync) ---------- */
+// A small Google Apps Script attached to the question-bank Google Doc reads the doc, files every
+// question under its subject heading and pushes the result here. This endpoint updates the bank in
+// place: unchanged questions keep their id (saved AI explanations and progress survive), edited or
+// new questions are added, and questions removed from the doc are removed here.
+async function setSetting(env, key, value) {
+  await env.DB.prepare("INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").bind(key, String(value)).run();
+}
+async function ensureBankSchema(env) {
+  for (const sql of ["ALTER TABLE mcqs ADD COLUMN qkey TEXT", "ALTER TABLE mcqs ADD COLUMN pos INTEGER NOT NULL DEFAULT 0"]) {
+    try { await env.DB.prepare(sql).run(); } catch {} // column already there
+  }
+  await env.DB.batch([
+    env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS ux_mcqs_qkey ON mcqs(qkey)"),
+    env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS ux_topics_title ON topics(title)"),
+    env.DB.prepare(AI_TABLE),
+  ]);
+}
+function sameText(a, b) {
+  if (typeof a !== "string" || typeof b !== "string" || a.length !== b.length) return false;
+  let d = 0; for (let i = 0; i < a.length; i++) d |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return d === 0;
+}
+async function applyBank(env, data, force) {
+  const topics = Array.isArray(data.topics) ? data.topics : [];
+  const qs = Array.isArray(data.questions) ? data.questions : [];
+  if (!topics.length || !qs.length) return { ok: false, message: "The document did not contain any readable questions." };
+  if (topics.length > 60 || qs.length > 6000) return { ok: false, message: "Too many topics or questions in one document." };
+  const titles = new Set();
+  for (const t of topics) {
+    if (!t || typeof t.title !== "string" || !t.title.trim() || !["I", "II"].includes(t.part) || typeof t.section !== "string" || !Number.isInteger(t.sort))
+      return { ok: false, message: "A subject heading in the document could not be read." };
+    titles.add(t.title);
+  }
+  const clip = (v, n) => String(v || "").slice(0, n);
+  const rows = [];
+  for (const q of qs) {
+    if (!q || !titles.has(q.topic) || !q.question || !q.a || !q.b || !q.c || !q.d || !["a", "b", "c", "d"].includes(q.correct) || typeof q.qkey !== "string")
+      return { ok: false, message: "A question in the document is incomplete." };
+    rows.push({ topic: q.topic, question: clip(q.question, 3000), a: clip(q.a, 800), b: clip(q.b, 800), c: clip(q.c, 800), d: clip(q.d, 800),
+                correct: q.correct, explanation: clip(q.explanation, 2000), qkey: clip(q.qkey, 40), pos: Number(q.pos) || 0 });
+  }
+  const cur = await env.DB.prepare("SELECT COUNT(*) AS n FROM mcqs").first();
+  if (!force && cur && cur.n > 20 && rows.length < cur.n * 0.5)
+    return { ok: false, needsForce: true, message: `The document now has ${rows.length} questions but the portal has ${cur.n}. Nothing was changed, in case questions were deleted by mistake.` };
+  await ensureBankSchema(env);
+  const x = (v, f) => `json_extract(${v}, '$.${f}')`;
+  const tj = JSON.stringify(topics.map(t => ({ part: t.part, section: clip(t.section, 60), title: clip(t.title, 300), sort: t.sort })));
+  const qj = JSON.stringify(rows), keys = JSON.stringify(rows.map(r => r.qkey)), tl = JSON.stringify([...titles].map(t => clip(t, 300)));
+  await env.DB.batch([
+    env.DB.prepare(`INSERT INTO topics (part, section, title, notes, sort)
+      SELECT ${x("value","part")}, ${x("value","section")}, ${x("value","title")}, '', ${x("value","sort")} FROM json_each(?1) WHERE true
+      ON CONFLICT(title) DO UPDATE SET part = excluded.part, section = excluded.section, sort = excluded.sort`).bind(tj),
+    env.DB.prepare("DELETE FROM mcqs WHERE qkey IS NULL OR qkey NOT IN (SELECT value FROM json_each(?1))").bind(keys),
+    env.DB.prepare(`INSERT INTO mcqs (topic_id, question, a, b, c, d, correct, explanation, qkey, pos)
+      SELECT t.id, ${x("j.value","question")}, ${x("j.value","a")}, ${x("j.value","b")}, ${x("j.value","c")}, ${x("j.value","d")},
+             ${x("j.value","correct")}, ${x("j.value","explanation")}, ${x("j.value","qkey")}, ${x("j.value","pos")}
+      FROM json_each(?1) j JOIN topics t ON t.title = ${x("j.value","topic")} WHERE true
+      ON CONFLICT(qkey) DO UPDATE SET topic_id = excluded.topic_id, explanation = excluded.explanation, pos = excluded.pos`).bind(qj),
+    env.DB.prepare("DELETE FROM topics WHERE title NOT IN (SELECT value FROM json_each(?1))").bind(tl),
+    env.DB.prepare("DELETE FROM mcqs WHERE topic_id NOT IN (SELECT id FROM topics)"),
+    env.DB.prepare("DELETE FROM ai_explanations WHERE mcq_id NOT IN (SELECT id FROM mcqs)"),
+  ]);
+  const after = await env.DB.prepare("SELECT COUNT(*) AS n FROM mcqs").first();
+  const report = { at: new Date().toISOString(), saved: after ? after.n : 0, ...(data.report || {}) };
+  await setSetting(env, "doc_sync_report", JSON.stringify(report).slice(0, 20000));
+  return { ok: true, saved: report.saved, topics: topics.length };
+}
+
 /* ---------- AI explanations (Gemini) ---------- */
 const AI_TABLE = `CREATE TABLE IF NOT EXISTS ai_explanations (
   mcq_id INTEGER PRIMARY KEY, en TEXT NOT NULL, ur TEXT NOT NULL, created_at TEXT NOT NULL)`;
+
+// Model choice: discover the Flash models this key can use, try the newest first,
+// and fall back down the list when one is unavailable or out of free quota.
+// Pro and other paid-only families are never used.
+const GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta";
+const FALLBACK_MODELS = ["gemini-flash-latest", "gemini-2.5-flash", "gemini-flash-lite-latest", "gemini-2.5-flash-lite"];
+const MODEL_CACHE = { list: null, at: 0, listNote: "" };
+const COOLDOWN = {}; // model -> time until which we skip it after a quota error
+
+function rankModels(names) {
+  const pick = [];
+  for (const full of names) {
+    const n = full.replace(/^models\//, "");
+    const m = n.match(/^gemini-(\d+(?:\.\d+)?)-flash(-lite)?(?:-(preview|exp)[\w.-]*|-\d{3})?$/);
+    if (!m) continue; // skips pro, image, tts, live, embedding and other families
+    pick.push({ n, ver: parseFloat(m[1]), lite: !!m[2], pre: !!m[3] });
+  }
+  pick.sort((a, b) => b.ver - a.ver || a.lite - b.lite || a.pre - b.pre || a.n.localeCompare(b.n));
+  return pick.map(x => x.n);
+}
+
+async function errText(r) {
+  try { const t = await r.text(); try { return (JSON.parse(t).error?.message || t).slice(0, 220); } catch { return t.slice(0, 220); } }
+  catch { return ""; }
+}
+
+async function candidateModels(env) {
+  const now = Date.now();
+  if (!MODEL_CACHE.list || now - MODEL_CACHE.at > 6 * 3600 * 1000) {
+    try {
+      const r = await fetch(`${GEMINI_BASE}/models?pageSize=200`, { headers: { "x-goog-api-key": env.GEMINI_API_KEY } });
+      if (!r.ok) MODEL_CACHE.listNote = `model list: HTTP ${r.status} ${await errText(r)}`;
+      if (r.ok) {
+        MODEL_CACHE.listNote = "";
+        const d = await r.json();
+        const usable = (d.models || [])
+          .filter(m => (m.supportedGenerationMethods || []).includes("generateContent"))
+          .map(m => m.name);
+        const ranked = rankModels(usable);
+        if (ranked.length) { MODEL_CACHE.list = ranked; MODEL_CACHE.at = now; }
+      }
+    } catch {}
+  }
+  const list = [env.GEMINI_MODEL, ...(MODEL_CACHE.list || []), ...FALLBACK_MODELS].filter(Boolean);
+  const unique = [...new Set(list)];
+  const ready = unique.filter(n => !(COOLDOWN[n] > now));
+  return ready.length ? ready : unique;
+}
 
 async function askGemini(env, q) {
   const letters = ["a", "b", "c", "d"];
@@ -288,29 +405,45 @@ Write ONE tight paragraph of 80 to 120 words in simple English that explains why
 Then translate that paragraph into clear, simple Urdu in Urdu script. Keep standard accounting or legal terms in English inside brackets where that helps.
 Respond with JSON only: {"en": "<English paragraph>", "ur": "<Urdu paragraph>"}`;
 
-  const models = [env.GEMINI_MODEL, "gemini-flash-latest", "gemini-2.5-flash"].filter(Boolean);
-  let last = null;
-  for (const model of [...new Set(models)]) {
-    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-goog-api-key": env.GEMINI_API_KEY },
-      body: JSON.stringify({
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.4, maxOutputTokens: 2048, responseMimeType: "application/json" },
-      }),
-    });
-    if (r.status === 404) { last = { status: 404 }; continue; } // model name not available: try the next one
-    if (!r.ok) return { status: r.status };
+  let lastStatus = 502, tries = 0;
+  const trail = [];
+  const models = await candidateModels(env);
+  if (MODEL_CACHE.listNote) trail.push(MODEL_CACHE.listNote);
+  for (const model of models) {
+    if (++tries > 6) break;
+    let r;
+    try {
+      r = await fetch(`${GEMINI_BASE}/models/${model}:generateContent`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-goog-api-key": env.GEMINI_API_KEY },
+        body: JSON.stringify({
+          contents: [{ role: "user", parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.4, maxOutputTokens: 8192, responseMimeType: "application/json" },
+        }),
+      });
+    } catch (e) { lastStatus = 502; trail.push(`${model}: network error`); continue; }
+    if (r.status === 429) { COOLDOWN[model] = Date.now() + 10 * 60 * 1000; lastStatus = 429; trail.push(`${model}: 429 ${await errText(r)}`); continue; } // out of free quota: next model
+    if (r.status === 401) { trail.push(`${model}: 401 ${await errText(r)}`); return { status: 401, trail }; } // key rejected
+    if (!r.ok) {
+      const why = await errText(r);
+      trail.push(`${model}: ${r.status} ${why}`);
+      if (/api key|API_KEY/i.test(why)) return { status: r.status, trail }; // bad key: no model will work
+      COOLDOWN[model] = Date.now() + 6 * 3600 * 1000; lastStatus = r.status; continue; // not available on this key: skip it for a while
+    }
     const data = await r.json();
-    const text = ((data.candidates || [])[0]?.content?.parts || []).map(p => p.text || "").join("").replace(/```json|```/g, "").trim();
+    const cand = (data.candidates || [])[0];
+    const parts = cand?.content?.parts || [];
+    const text = parts.filter(p => !p.thought).map(p => p.text || "").join("").replace(/```json|```/g, "").trim();
     try {
       const out = JSON.parse(text);
       if (typeof out.en === "string" && typeof out.ur === "string" && out.en.trim() && out.ur.trim())
-        return { en: out.en.trim(), ur: out.ur.trim() };
+        return { en: out.en.trim(), ur: out.ur.trim(), model, trail };
     } catch {}
-    return { status: 502 };
+    trail.push(`${model}: answer not usable (finish reason ${cand?.finishReason || "none"}${data.promptFeedback?.blockReason ? ", blocked " + data.promptFeedback.blockReason : ""})`);
+    lastStatus = 502; // unusable answer: try the next model
   }
-  return last || { status: 502 };
+  if (!models.length) trail.push("no models to try");
+  return { status: lastStatus, trail };
 }
 
 /* ---------- router ---------- */
@@ -325,6 +458,11 @@ export async function onRequest(context) {
 
   /* public */
   if (path === "/setup" && method === "POST") return runSetup(env, body);
+  if (path === "/doc-push" && method === "POST") {
+    if (!env.DOC_SYNC_KEY) return json({ ok: false, message: "DOC_SYNC_KEY is not set in Cloudflare yet." }, 503);
+    if (!sameText(request.headers.get("X-Sync-Key") || "", env.DOC_SYNC_KEY)) return json({ ok: false, message: "Wrong sync key." }, 403);
+    return json(await applyBank(env, body || {}, !!(body && body.force)));
+  }
   if (path === "/login" && method === "POST") return handleLogin(env, body);
   if (path === "/logout" && method === "POST") return json({ ok: true }, 200, clearCookie());
 
@@ -379,9 +517,12 @@ export async function onRequest(context) {
     const section = new URL(request.url).searchParams.get("section") || "all";
     const base = `SELECT m.id, m.topic_id, m.question, m.a, m.b, m.c, m.d, m.correct, m.explanation
                   FROM mcqs m JOIN topics t ON t.id = m.topic_id`;
-    const rows = section === "all"
-      ? (await env.DB.prepare(base + " ORDER BY t.sort, m.id").all()).results
-      : (await env.DB.prepare(base + " WHERE t.section = ? ORDER BY t.sort, m.id").bind(section).all()).results;
+    const run = order => section === "all"
+      ? env.DB.prepare(base + order).all()
+      : env.DB.prepare(base + " WHERE t.section = ?" + order).bind(section).all();
+    let rows;
+    try { rows = (await run(" ORDER BY t.sort, m.pos, m.id")).results; }
+    catch { rows = (await run(" ORDER BY t.sort, m.id")).results; } // before the first document sync
     return json({ questions: rows });
   }
   if (path === "/explain" && method === "POST") {
@@ -394,10 +535,15 @@ export async function onRequest(context) {
     const q = await env.DB.prepare("SELECT question, a, b, c, d, correct FROM mcqs WHERE id = ?").bind(id).first();
     if (!q) return json({ error: "not_found" }, 404);
     const out = await askGemini(env, q);
-    if (out.status === 429) return json({ error: "busy", message: "The AI is busy right now. Please try again in a minute." }, 429);
-    if (!out.en) return json({ error: "ai_failed", message: "The AI could not explain this one right now. Please try again shortly." }, 502);
-    await env.DB.prepare("INSERT OR REPLACE INTO ai_explanations (mcq_id, en, ur, created_at) VALUES (?, ?, ?, ?)")
-      .bind(id, out.en, out.ur, new Date().toISOString()).run();
+    const detail = g.user.role === "admin" ? { detail: out.trail } : {};
+    if (out.status === 429) return json({ error: "busy", message: "The AI is busy right now. Please try again in a minute.", ...detail }, 429);
+    if (!out.en) return json({ error: "ai_failed", message: "The AI could not explain this one right now. Please try again shortly.", ...detail }, 502);
+    await env.DB.batch([
+      env.DB.prepare("INSERT OR REPLACE INTO ai_explanations (mcq_id, en, ur, created_at) VALUES (?, ?, ?, ?)")
+        .bind(id, out.en, out.ur, new Date().toISOString()),
+      env.DB.prepare("INSERT INTO settings (key, value) VALUES ('ai_last_model', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value")
+        .bind(out.model),
+    ]);
     return json({ ok: true, en: out.en, ur: out.ur });
   }
   if (path === "/attempt" && method === "POST") {
@@ -509,9 +655,29 @@ export async function onRequest(context) {
     ).bind(q.topic_id, q.question, q.a, q.b, q.c, q.d, q.correct, q.explanation || "")));
     return json({ ok: true, inserted: rows.length });
   }
+  if (path === "/admin/doc" && method === "GET") {
+    const g = await requireAdmin(env, request); if (g.err) return g.err;
+    const rep = await getSetting(env, "doc_sync_report", null);
+    return json({ key_set: !!env.DOC_SYNC_KEY, report: rep ? JSON.parse(rep) : null });
+  }
+  if (path === "/admin/ai-test" && method === "POST") {
+    const g = await requireAdmin(env, request); if (g.err) return g.err;
+    if (!env.GEMINI_API_KEY) return json({ ok: false, trail: ["GEMINI_API_KEY is not set for this deployment (Production)."] });
+    for (const k of Object.keys(COOLDOWN)) delete COOLDOWN[k];
+    MODEL_CACHE.list = null;
+    const out = await askGemini(env, { question: "Which account is credited when goods are sold for cash?", a: "Cash account", b: "Sales account", c: "Purchases account", d: "Capital account", correct: "b" });
+    return json({ ok: !!out.en, model: out.model || null, sample: out.en ? out.en.slice(0, 160) : null, models: MODEL_CACHE.list || [], trail: out.trail || [] });
+  }
   if (path === "/admin/settings" && method === "GET") {
     const g = await requireAdmin(env, request); if (g.err) return g.err;
-    return json({ expiry_date: await getSetting(env, "expiry_date", "2027-01-31") });
+    await env.DB.prepare(AI_TABLE).run();
+    const cachedAi = await env.DB.prepare("SELECT COUNT(*) AS n FROM ai_explanations").first();
+    return json({
+      expiry_date: await getSetting(env, "expiry_date", "2027-01-31"),
+      ai_on: !!env.GEMINI_API_KEY,
+      ai_last_model: await getSetting(env, "ai_last_model", null),
+      ai_cached: cachedAi ? cachedAi.n : 0,
+    });
   }
   if (path === "/admin/settings" && method === "POST") {
     const g = await requireAdmin(env, request); if (g.err) return g.err;

@@ -240,7 +240,7 @@ async function explain(id, btn){
     if(!d || !d.ok){
       btn.disabled = false; btn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i>AI explain`;
       const old = box.querySelector(".ai-err"); if(old) old.remove();
-      box.insertAdjacentHTML("beforeend", `<div class="ai-err">${esc((d&&d.message)||"Could not reach the AI. Please try again.")}</div>`);
+      box.insertAdjacentHTML("beforeend", `<div class="ai-err">${esc((d&&d.message)||"Could not reach the AI. Please try again.")}${d&&d.detail?`<br><small>Admin detail: ${d.detail.map(esc).join(" | ")}</small>`:""}</div>`);
       return;
     }
     AIC[id] = {en:d.en, ur:d.ur};
