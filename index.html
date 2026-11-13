@@ -5,98 +5,117 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <title>Sign in · FPSC Exam Portal by Simply Commerce Academy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <script src="/assets/logo.js"></script>
 <style>
   :root{
-    --ink:#1C2B5A; --ink-deep:#14204a; --gold:#C2922A; --paper:#F6F5EF;
-    --rule:#D9D4C7; --white:#fff; --bad:#B3362B;
+    --ink:#1C2B5A; --ink-2:#142047; --gold:#C2922A; --gold-soft:#E9D7A8;
+    --paper:#F5F3EC; --line:#E3DFD3; --muted:#5D6372; --bad:#B3362B;
+    --wa:#25D366; --yt:#FF0000;
+    --serif:"Source Serif 4", Georgia, "Times New Roman", serif;
+    --sans:"Public Sans", -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   }
   *{box-sizing:border-box}
   html,body{height:100%}
-  body{
-    margin:0; font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
-    background:var(--ink); color:var(--ink);
-    display:flex; flex-direction:column; align-items:center;
+  body{margin:0; font-family:var(--sans); color:var(--ink); background:var(--paper)}
+  .wrap{min-height:100%; display:grid; grid-template-columns:minmax(0,1.05fr) minmax(0,1fr)}
+  /* brand panel */
+  .brand{background:radial-gradient(120% 90% at 0% 0%, #26386f 0%, var(--ink) 45%, var(--ink-2) 100%); color:#fff;
+    padding:48px 56px; display:flex; flex-direction:column; justify-content:space-between; gap:36px}
+  .crest{display:flex; align-items:center; gap:14px}
+  .crest .disc{width:64px; height:64px; border-radius:50%; background:#fff; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 0 0 3px rgba(194,146,42,.55)}
+  .crest img{width:48px; height:auto}
+  .crest b{display:block; font-size:15px; letter-spacing:.2px}
+  .crest span{font-size:13px; color:var(--gold-soft)}
+  .hero h1{font-family:var(--serif); font-weight:700; font-size:clamp(34px,4.2vw,52px); line-height:1.05; margin:0 0 14px}
+  .hero p{font-size:16.5px; line-height:1.55; color:#d9deec; margin:0; max-width:34ch}
+  .post{margin-top:22px; padding-left:14px; border-left:3px solid var(--gold); font-family:var(--serif); font-size:18px; line-height:1.35}
+  .post small{display:block; font-family:var(--sans); font-size:13px; color:var(--gold-soft); margin-top:3px}
+  .facts{list-style:none; margin:0; padding:0; display:grid; gap:12px}
+  .facts li{display:flex; gap:12px; align-items:flex-start; font-size:14.5px; line-height:1.45; color:#e6e9f2}
+  .facts i{color:var(--gold); width:18px; margin-top:3px; text-align:center}
+  /* sign-in side */
+  .side{display:flex; flex-direction:column; justify-content:center; align-items:center; padding:40px 24px}
+  .card{width:100%; max-width:400px; background:#fff; border:1px solid var(--line); border-radius:14px; padding:30px 28px 24px;
+    box-shadow:0 18px 40px -24px rgba(28,43,90,.35)}
+  .card h2{font-family:var(--serif); font-size:26px; margin:0 0 4px}
+  .card .sub{color:var(--muted); font-size:14px; margin:0 0 18px}
+  label{display:block; font-size:13px; font-weight:600; margin:14px 0 6px}
+  .field{position:relative}
+  .field i{position:absolute; left:13px; top:50%; transform:translateY(-50%); color:#8a90a0; font-size:14px}
+  input{width:100%; padding:12px 12px 12px 38px; font-size:16px; font-family:inherit; border:1px solid #cfcab9; border-radius:8px; color:var(--ink); background:#fff}
+  input:focus{outline:none; border-color:var(--gold); box-shadow:0 0 0 3px rgba(194,146,42,.22)}
+  .btn{width:100%; margin-top:20px; padding:13px; font-size:16px; font-weight:700; font-family:inherit;
+    background:var(--ink); color:#fff; border:0; border-radius:8px; cursor:pointer}
+  .btn:hover{background:var(--ink-2)}
+  .btn:focus-visible{outline:3px solid var(--gold); outline-offset:2px}
+  .btn[disabled]{opacity:.6; cursor:wait}
+  .err{display:none; margin-top:14px; padding:10px 12px; font-size:14px; background:#faeeec; border-left:3px solid var(--bad); color:#6d2018; border-radius:4px}
+  .enrol{display:flex; align-items:center; justify-content:center; gap:9px; margin-top:16px; padding:11px; border-radius:8px;
+    border:1px solid #bfe9cf; background:#effaf3; color:#14532d; font-weight:600; font-size:14.5px; text-decoration:none}
+  .enrol i{color:var(--wa); font-size:20px}
+  .enrol:hover{background:#e3f6ea}
+  .social{display:flex; gap:10px; justify-content:center; margin-top:22px}
+  .social a{display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:999px; background:#fff; border:1px solid var(--line);
+    color:var(--ink); text-decoration:none; font-size:13.5px; font-weight:600}
+  .social a:hover{border-color:#c9c3b2}
+  .social .fa-whatsapp{color:var(--wa); font-size:18px}
+  .social .fa-youtube{color:var(--yt); font-size:18px}
+  .made{margin-top:14px; font-size:12.5px; color:var(--muted); text-align:center}
+  @media (max-width:860px){
+    .wrap{grid-template-columns:1fr}
+    .brand{padding:28px 22px 30px; gap:22px}
+    .hero h1{font-size:34px}
+    .facts{display:none}
+    .side{padding:24px 16px 34px}
   }
-  main{flex:1; display:flex; align-items:center; justify-content:center; width:100%; padding:24px 16px}
-  .card{
-    background:var(--white); width:100%; max-width:380px;
-    border-top:4px solid var(--gold); padding:28px 26px 24px;
-    box-shadow:0 10px 30px rgba(0,0,0,.35);
-  }
-  .brand{text-align:center; margin-bottom:4px}
-  .brand img{width:72px; height:auto}
-  h1{
-    font-family:Georgia,"Times New Roman",serif; font-size:24px; font-weight:700;
-    text-align:center; margin:10px 0 2px;
-  }
-  .by{text-align:center; font-size:13px; color:#5a5f6e; margin:0 0 2px}
-  .exam{
-    text-align:center; font-family:Georgia,serif; font-size:13.5px; color:var(--ink);
-    border-top:1px solid var(--rule); border-bottom:1px solid var(--rule);
-    padding:8px 0; margin:14px 0 18px;
-  }
-  label{display:block; font-size:13px; font-weight:600; margin:12px 0 4px}
-  input{
-    width:100%; padding:11px 12px; font-size:16px; border:1px solid #b9b4a6;
-    border-radius:4px; background:#fff; color:var(--ink);
-  }
-  input:focus{outline:2px solid var(--gold); outline-offset:1px; border-color:var(--gold)}
-  button{
-    width:100%; margin-top:18px; padding:12px; font-size:16px; font-weight:700;
-    background:var(--ink); color:#fff; border:0; border-radius:4px; cursor:pointer;
-  }
-  button:hover{background:var(--ink-deep)}
-  button:focus-visible{outline:3px solid var(--gold); outline-offset:2px}
-  button[disabled]{opacity:.6; cursor:wait}
-  .err{
-    display:none; margin-top:14px; padding:10px 12px; font-size:14px;
-    background:#faeeec; border-left:3px solid var(--bad); color:#6d2018;
-  }
-  .hint{font-size:12.5px; color:#5a5f6e; text-align:center; margin-top:14px}
-  .hint a{color:var(--ink)}
-  footer{
-    width:100%; text-align:center; padding:16px 12px 22px; font-size:12.5px;
-    color:#c9cede;
-  }
-  footer a{color:#e9d9ac; text-decoration:none}
-  footer a:hover{text-decoration:underline}
-  .sep{margin:0 6px; color:#6d7693}
 </style>
 </head>
 <body>
-<main>
-  <form class="card" id="f" autocomplete="off">
-    <div class="brand"><img id="logo" alt="Simply Commerce Academy"></div>
-    <h1>FPSC Exam Portal</h1>
-    <p class="by">by Simply Commerce Academy — Where Commerce Meets Clarity</p>
-    <p class="exam">Assistant Audit Officer (BS-17)<br>Office of the Auditor-General of Pakistan</p>
+<div class="wrap">
+  <section class="brand">
+    <div class="crest">
+      <div class="disc"><img id="logo" alt="Simply Commerce Academy"></div>
+      <div><b>Simply Commerce Academy</b><span>Where Commerce Meets Clarity</span></div>
+    </div>
+    <div class="hero">
+      <h1>FPSC Exam Portal</h1>
+      <p>Focused preparation for the federal screening test, built around the official syllabus.</p>
+      <div class="post">Assistant Audit Officer (BS-17)<small>Office of the Auditor-General of Pakistan</small></div>
+    </div>
+    <ul class="facts">
+      <li><i class="fa-solid fa-list-check"></i><span>A 100-MCQ paper: 20 English and 80 professional, mirrored in every mock test.</span></li>
+      <li><i class="fa-solid fa-layer-group"></i><span>Topic-wise practice across accounting, auditing and public-sector finance.</span></li>
+      <li><i class="fa-solid fa-language"></i><span>AI explanations for every question, in English or Urdu.</span></li>
+    </ul>
+  </section>
 
-    <label for="phone">Mobile number</label>
-    <input id="phone" name="phone" inputmode="tel" placeholder="03XX XXXXXXX" required>
-
-    <label for="password">Password</label>
-    <input id="password" name="password" type="password" required>
-
-    <button id="btn" type="submit">Sign in</button>
-    <div class="err" id="err" role="alert"></div>
-
-    <p class="hint">No account yet? Message us on <a href="https://wa.me/923322466420" target="_blank" rel="noopener">WhatsApp</a> to enrol.</p>
-  </form>
-</main>
-<footer>
-  Made by Simply Commerce Academy
-  <span class="sep">·</span><a href="https://wa.me/923322466420" target="_blank" rel="noopener">WhatsApp +92 332 2466420</a>
-  <br>
-  <a href="https://www.youtube.com/@SimplyCommerceAcademy-i5w" target="_blank" rel="noopener">YouTube</a>
-  <span class="sep">·</span><a href="https://facebook.com/profile.php?id=61566147640997" target="_blank" rel="noopener">Facebook</a>
-  <span class="sep">·</span><a href="https://instagram.com/simplycommerceacademy" target="_blank" rel="noopener">Instagram</a>
-</footer>
+  <section class="side">
+    <form class="card" id="f" autocomplete="off">
+      <h2>Sign in</h2>
+      <p class="sub">Use the mobile number and password we sent you.</p>
+      <label for="phone">Mobile number</label>
+      <div class="field"><i class="fa-solid fa-mobile-screen"></i><input id="phone" inputmode="tel" placeholder="03XX XXXXXXX" required></div>
+      <label for="password">Password</label>
+      <div class="field"><i class="fa-solid fa-lock"></i><input id="password" type="password" required></div>
+      <button class="btn" id="btn" type="submit">Sign in</button>
+      <div class="err" id="err" role="alert"></div>
+      <a class="enrol" href="https://wa.me/923322466420" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i>New here? Enrol on WhatsApp</a>
+    </form>
+    <div class="social">
+      <a href="https://wa.me/923322466420" target="_blank" rel="noopener" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i>+92 332 2466420</a>
+      <a href="https://www.youtube.com/@SimplyCommerceAcademy-i5w" target="_blank" rel="noopener" aria-label="YouTube"><i class="fa-brands fa-youtube"></i>YouTube</a>
+    </div>
+    <div class="made">Made by Simply Commerce Academy</div>
+  </section>
+</div>
 <script>
   document.getElementById("logo").src = window.SCA_LOGO;
-  const link = document.createElement("link"); link.rel = "icon"; link.href = window.SCA_LOGO;
-  document.head.appendChild(link);
-
+  const link = document.createElement("link"); link.rel = "icon"; link.href = window.SCA_LOGO; document.head.appendChild(link);
   function deviceId(){
     let d = localStorage.getItem("sca_device");
     if(!d){ d = crypto.randomUUID(); localStorage.setItem("sca_device", d); }
@@ -113,14 +132,8 @@
   f.addEventListener("submit", async (e) => {
     e.preventDefault(); err.style.display = "none"; btn.disabled = true;
     try{
-      const r = await fetch("/api/login", {
-        method:"POST", headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({
-          phone: document.getElementById("phone").value,
-          password: document.getElementById("password").value,
-          device_id: deviceId(),
-        }),
-      });
+      const r = await fetch("/api/login", { method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ phone: document.getElementById("phone").value, password: document.getElementById("password").value, device_id: deviceId() }) });
       const d = await r.json();
       if(d.ok){ location.href = d.role === "admin" ? "/admin.html" : "/app.html"; return; }
       err.textContent = d.message || MSG[d.error] || "Sign in failed. Please try again.";
@@ -130,7 +143,6 @@
       err.style.display = "block";
     }finally{ btn.disabled = false; }
   });
-  // Already signed in? Go straight in.
   fetch("/api/me").then(r => r.ok ? r.json() : null).then(d => {
     if(d && d.role) location.href = d.role === "admin" ? "/admin.html" : "/app.html";
   }).catch(()=>{});

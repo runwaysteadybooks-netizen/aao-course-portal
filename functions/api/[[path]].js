@@ -271,6 +271,48 @@ async function handleLogin(env, body) {
   return json({ ok: true, role: user.role, name: user.name }, 200, setCookie(token));
 }
 
+/* ---------- AI explanations (Gemini) ---------- */
+const AI_TABLE = `CREATE TABLE IF NOT EXISTS ai_explanations (
+  mcq_id INTEGER PRIMARY KEY, en TEXT NOT NULL, ur TEXT NOT NULL, created_at TEXT NOT NULL)`;
+
+async function askGemini(env, q) {
+  const letters = ["a", "b", "c", "d"];
+  const prompt =
+`You are a tutor for candidates in Pakistan preparing for the FPSC Assistant Audit Officer (BS-17) test.
+
+Question: ${q.question}
+${letters.map(k => `${k.toUpperCase()}) ${q[k]}`).join("\n")}
+Correct answer: ${q.correct.toUpperCase()}) ${q[q.correct]}
+
+Write ONE tight paragraph of 80 to 120 words in simple English that explains why the correct answer is right. Include one or two short, concrete examples (use Pakistani context and rupee amounts where natural). If students commonly confuse this with one of the other options, say why in one sentence. No headings, no bullet points, no markdown, no greeting.
+Then translate that paragraph into clear, simple Urdu in Urdu script. Keep standard accounting or legal terms in English inside brackets where that helps.
+Respond with JSON only: {"en": "<English paragraph>", "ur": "<Urdu paragraph>"}`;
+
+  const models = [env.GEMINI_MODEL, "gemini-flash-latest", "gemini-2.5-flash"].filter(Boolean);
+  let last = null;
+  for (const model of [...new Set(models)]) {
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-goog-api-key": env.GEMINI_API_KEY },
+      body: JSON.stringify({
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.4, maxOutputTokens: 2048, responseMimeType: "application/json" },
+      }),
+    });
+    if (r.status === 404) { last = { status: 404 }; continue; } // model name not available: try the next one
+    if (!r.ok) return { status: r.status };
+    const data = await r.json();
+    const text = ((data.candidates || [])[0]?.content?.parts || []).map(p => p.text || "").join("").replace(/```json|```/g, "").trim();
+    try {
+      const out = JSON.parse(text);
+      if (typeof out.en === "string" && typeof out.ur === "string" && out.en.trim() && out.ur.trim())
+        return { en: out.en.trim(), ur: out.ur.trim() };
+    } catch {}
+    return { status: 502 };
+  }
+  return last || { status: 502 };
+}
+
 /* ---------- router ---------- */
 export async function onRequest(context) {
   const { request, env, params } = context;
@@ -341,6 +383,22 @@ export async function onRequest(context) {
       ? (await env.DB.prepare(base + " ORDER BY t.sort, m.id").all()).results
       : (await env.DB.prepare(base + " WHERE t.section = ? ORDER BY t.sort, m.id").bind(section).all()).results;
     return json({ questions: rows });
+  }
+  if (path === "/explain" && method === "POST") {
+    const g = await requireAccess(env, request); if (g.err) return g.err;
+    const id = Number(body.id);
+    await env.DB.prepare(AI_TABLE).run();
+    const cached = await env.DB.prepare("SELECT en, ur FROM ai_explanations WHERE mcq_id = ?").bind(id).first();
+    if (cached) return json({ ok: true, en: cached.en, ur: cached.ur });
+    if (!env.GEMINI_API_KEY) return json({ error: "ai_off", message: "AI explanations are not switched on yet." }, 503);
+    const q = await env.DB.prepare("SELECT question, a, b, c, d, correct FROM mcqs WHERE id = ?").bind(id).first();
+    if (!q) return json({ error: "not_found" }, 404);
+    const out = await askGemini(env, q);
+    if (out.status === 429) return json({ error: "busy", message: "The AI is busy right now. Please try again in a minute." }, 429);
+    if (!out.en) return json({ error: "ai_failed", message: "The AI could not explain this one right now. Please try again shortly." }, 502);
+    await env.DB.prepare("INSERT OR REPLACE INTO ai_explanations (mcq_id, en, ur, created_at) VALUES (?, ?, ?, ?)")
+      .bind(id, out.en, out.ur, new Date().toISOString()).run();
+    return json({ ok: true, en: out.en, ur: out.ur });
   }
   if (path === "/attempt" && method === "POST") {
     const g = await requireAccess(env, request); if (g.err) return g.err;
@@ -424,7 +482,9 @@ export async function onRequest(context) {
       if (!t.title || !["I", "II"].includes(t.part) || !t.section || !Number.isInteger(t.sort))
         return json({ error: "bad_file", message: "A topic in the file is missing its title, part, section or order." }, 400);
     }
+    await env.DB.prepare(AI_TABLE).run();
     const stmts = [
+      env.DB.prepare("DELETE FROM ai_explanations"),
       env.DB.prepare("DELETE FROM attempts"),
       env.DB.prepare("DELETE FROM mcqs"),
       env.DB.prepare("DELETE FROM topics"),
