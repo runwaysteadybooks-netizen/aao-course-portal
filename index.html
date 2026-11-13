@@ -7,112 +7,340 @@
 <title>Sign in · FPSC Exam Portal by Simply Commerce Academy</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800;900&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <script src="/assets/logo.js"></script>
 <style>
   :root{
-    --ink:#1C2B5A; --ink-2:#142047; --gold:#C2922A; --gold-soft:#E9D7A8;
-    --paper:#F5F3EC; --line:#E3DFD3; --muted:#5D6372; --bad:#B3362B;
-    --wa:#25D366; --yt:#FF0000;
+    --navy:#0E1D45; --navy-2:#0A1636; --navy-3:#16295C; --ink:#1C2B5A;
+    --sun:#F0AE34; --sun-soft:#FBE3B0; --cream:#F6F2E8; --card:#FFFFFF; --line:#E6DFCD; --muted:#5D6372; --bad:#B3362B;
+    --wa:#25D366; --wa-dark:#128C4B; --yt:#FF0000;
     --serif:"Source Serif 4", Georgia, "Times New Roman", serif;
     --sans:"Public Sans", -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   }
   *{box-sizing:border-box}
-  html,body{height:100%}
-  body{margin:0; font-family:var(--sans); color:var(--ink); background:var(--paper)}
-  .wrap{min-height:100%; display:grid; grid-template-columns:minmax(0,1.05fr) minmax(0,1fr)}
-  /* brand panel */
-  .brand{background:radial-gradient(120% 90% at 0% 0%, #26386f 0%, var(--ink) 45%, var(--ink-2) 100%); color:#fff;
-    padding:48px 56px; display:flex; flex-direction:column; justify-content:space-between; gap:36px}
-  .crest{display:flex; align-items:center; gap:14px}
-  .crest .disc{width:64px; height:64px; border-radius:50%; background:#fff; display:flex; align-items:center; justify-content:center;
-    box-shadow:0 0 0 3px rgba(194,146,42,.55)}
-  .crest img{width:48px; height:auto}
-  .crest b{display:block; font-size:15px; letter-spacing:.2px}
-  .crest span{font-size:13px; color:var(--gold-soft)}
-  .hero h1{font-family:var(--serif); font-weight:700; font-size:clamp(34px,4.2vw,52px); line-height:1.05; margin:0 0 14px}
-  .hero p{font-size:16.5px; line-height:1.55; color:#d9deec; margin:0; max-width:34ch}
-  .post{margin-top:22px; padding-left:14px; border-left:3px solid var(--gold); font-family:var(--serif); font-size:18px; line-height:1.35}
-  .post small{display:block; font-family:var(--sans); font-size:13px; color:var(--gold-soft); margin-top:3px}
-  .facts{list-style:none; margin:0; padding:0; display:grid; gap:12px}
-  .facts li{display:flex; gap:12px; align-items:flex-start; font-size:14.5px; line-height:1.45; color:#e6e9f2}
-  .facts i{color:var(--gold); width:18px; margin-top:3px; text-align:center}
-  /* sign-in side */
-  .side{display:flex; flex-direction:column; justify-content:center; align-items:center; padding:40px 24px}
-  .card{width:100%; max-width:400px; background:#fff; border:1px solid var(--line); border-radius:14px; padding:30px 28px 24px;
-    box-shadow:0 18px 40px -24px rgba(28,43,90,.35)}
-  .card h2{font-family:var(--serif); font-size:26px; margin:0 0 4px}
-  .card .sub{color:var(--muted); font-size:14px; margin:0 0 18px}
-  label{display:block; font-size:13px; font-weight:600; margin:14px 0 6px}
+  body{margin:0; font-family:var(--sans); color:var(--ink); background:var(--cream)}
+  a{color:inherit}
+  .wrap{max-width:1180px; margin:0 auto; padding:0 28px}
+  .kicker{font-size:12px; font-weight:800; letter-spacing:2.6px; text-transform:uppercase; color:#A7741A}
+  .kicker b{color:var(--ink)}
+  h2.big{font-weight:900; font-size:clamp(28px,3.4vw,40px); line-height:1.05; letter-spacing:-.5px; margin:6px 0 18px}
+
+  /* ---------- hero ---------- */
+  .hero{background:radial-gradient(70% 90% at 100% 0%, rgba(58,82,160,.45), transparent 60%), var(--navy); color:#fff; position:relative; overflow:hidden}
+  .hero::after{content:""; position:absolute; width:520px; height:520px; right:-160px; top:-180px; border-radius:50%; border:1px solid rgba(240,174,52,.35); pointer-events:none}
+  .topbar{display:flex; justify-content:space-between; align-items:center; gap:14px; padding:22px 0 0; position:relative; z-index:1}
+  .brand{display:flex; align-items:center; gap:12px}
+  .brand .disc{width:54px; height:54px; border-radius:50%; background:#fff; display:flex; align-items:center; justify-content:center; flex:none; box-shadow:0 0 0 3px var(--sun)}
+  .brand img{width:42px; height:auto}
+  .brand b{display:block; font-weight:900; font-size:15.5px; letter-spacing:.4px; text-transform:uppercase}
+  .brand span{font-size:11.5px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--sun)}
+  .pill{border:1px solid rgba(255,255,255,.35); border-radius:999px; padding:6px 14px; font-size:11.5px; font-weight:700; letter-spacing:2.2px; text-transform:uppercase}
+  .hero-grid{display:grid; grid-template-columns:minmax(0,1.25fr) minmax(0,.9fr); gap:44px; align-items:center; padding:34px 0 48px; position:relative; z-index:1}
+  .band{display:inline-block; background:var(--sun); color:var(--navy-2); font-weight:800; font-size:12px; letter-spacing:1.8px; text-transform:uppercase; padding:6px 12px; border-radius:3px}
+  .hero h1{margin:16px 0 0; font-weight:900; font-size:clamp(40px,5.2vw,70px); line-height:.98; letter-spacing:-1px}
+  .posts{display:flex; align-items:flex-end; gap:16px; margin-top:10px}
+  .posts .n{font-weight:900; color:var(--sun); font-size:clamp(84px,10.5vw,138px); line-height:.85; letter-spacing:-3px}
+  .posts .l b{display:block; font-weight:900; font-size:clamp(24px,2.6vw,34px); letter-spacing:.5px; line-height:1}
+  .posts .l span{display:block; margin-top:6px; font-size:14px; color:#D3D9EA}
+  .tag{display:inline-flex; align-items:center; gap:8px; margin-top:20px; font-weight:800; font-size:13px; letter-spacing:1.6px; text-transform:uppercase; color:#fff; background:rgba(255,255,255,.08); border:1px dashed rgba(240,174,52,.6); padding:8px 13px; border-radius:4px}
+  .tag i{color:var(--sun)}
+  .tiles{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-top:22px}
+  .tile{border:1px solid rgba(255,255,255,.18); border-radius:10px; padding:11px 13px}
+  .tile small{display:block; font-size:10.5px; font-weight:700; letter-spacing:1.6px; text-transform:uppercase; color:#AEB8D3}
+  .tile b{display:block; margin-top:4px; font-size:17px; font-weight:800}
+  .tile.sun{background:var(--sun); border-color:var(--sun); color:var(--navy-2)} .tile.sun small{color:#6B4A0C}
+
+  /* sign-in card */
+  .card{width:100%; max-width:410px; justify-self:end; background:#fff; color:var(--ink); border-radius:16px; padding:28px 26px 22px; box-shadow:0 30px 60px -30px rgba(0,0,0,.6)}
+  .card h3{font-family:var(--serif); font-size:26px; margin:0 0 4px}
+  .card .sub{color:var(--muted); font-size:14px; margin:0 0 16px}
+  label{display:block; font-size:13px; font-weight:700; margin:14px 0 6px}
   .field{position:relative}
-  .field i{position:absolute; left:13px; top:50%; transform:translateY(-50%); color:#8a90a0; font-size:14px}
+  .field > i{position:absolute; left:13px; top:50%; transform:translateY(-50%); color:#8a90a0; font-size:14px}
+  .field .eye{position:absolute; right:4px; top:50%; transform:translateY(-50%); background:none; border:0; padding:8px 10px; cursor:pointer; color:#6b7180; border-radius:6px}
+  .field .eye i{font-size:16px}
+  .field .eye:hover{color:var(--ink)} .field .eye:focus-visible{outline:2px solid var(--sun)}
+  #password{padding-right:46px}
   input{width:100%; padding:12px 12px 12px 38px; font-size:16px; font-family:inherit; border:1px solid #cfcab9; border-radius:8px; color:var(--ink); background:#fff}
-  input:focus{outline:none; border-color:var(--gold); box-shadow:0 0 0 3px rgba(194,146,42,.22)}
-  .btn{width:100%; margin-top:20px; padding:13px; font-size:16px; font-weight:700; font-family:inherit;
-    background:var(--ink); color:#fff; border:0; border-radius:8px; cursor:pointer}
-  .btn:hover{background:var(--ink-2)}
-  .btn:focus-visible{outline:3px solid var(--gold); outline-offset:2px}
-  .btn[disabled]{opacity:.6; cursor:wait}
+  input:focus{outline:none; border-color:var(--sun); box-shadow:0 0 0 3px rgba(240,174,52,.3)}
+  .btn{width:100%; margin-top:20px; padding:13px; font-size:16px; font-weight:800; font-family:inherit; background:var(--navy); color:#fff; border:0; border-radius:8px; cursor:pointer}
+  .btn:hover{background:var(--navy-3)} .btn:focus-visible{outline:3px solid var(--sun); outline-offset:2px} .btn[disabled]{opacity:.6; cursor:wait}
   .err{display:none; margin-top:14px; padding:10px 12px; font-size:14px; background:#faeeec; border-left:3px solid var(--bad); color:#6d2018; border-radius:4px}
-  .enrol{display:flex; align-items:center; justify-content:center; gap:9px; margin-top:16px; padding:11px; border-radius:8px;
-    border:1px solid #bfe9cf; background:#effaf3; color:#14532d; font-weight:600; font-size:14.5px; text-decoration:none}
-  .enrol i{color:var(--wa); font-size:20px}
-  .enrol:hover{background:#e3f6ea}
-  .social{display:flex; gap:10px; justify-content:center; margin-top:22px}
-  .social a{display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:999px; background:#fff; border:1px solid var(--line);
-    color:var(--ink); text-decoration:none; font-size:13.5px; font-weight:600}
-  .social a:hover{border-color:#c9c3b2}
-  .social .fa-whatsapp{color:var(--wa); font-size:18px}
-  .social .fa-youtube{color:var(--yt); font-size:18px}
-  .made{margin-top:14px; font-size:12.5px; color:var(--muted); text-align:center}
-  @media (max-width:860px){
-    .wrap{grid-template-columns:1fr}
-    .brand{padding:28px 22px 30px; gap:22px}
-    .hero h1{font-size:34px}
-    .facts{display:none}
-    .side{padding:24px 16px 34px}
+  .enrol{display:flex; align-items:center; justify-content:center; gap:9px; margin-top:14px; padding:11px; border-radius:8px; border:1px solid #bfe9cf; background:#effaf3; color:#14532d; font-weight:700; font-size:14.5px; text-decoration:none}
+  .enrol i{color:var(--wa); font-size:20px} .enrol:hover{background:#e3f6ea}
+
+  /* ---------- sections ---------- */
+  section.s{padding:56px 0 8px}
+  .grid3{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px}
+  .box{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px}
+  .box small{display:block; font-size:10.5px; font-weight:800; letter-spacing:1.6px; text-transform:uppercase; color:var(--muted)}
+  .box b{display:block; margin-top:4px; font-size:22px; font-weight:900}
+  .box span{display:block; font-size:12.5px; color:var(--muted); margin-top:2px}
+  .box.sun{background:var(--sun); border-color:var(--sun)} .box.sun small,.box.sun span{color:#5E400A}
+  .ref{font-size:12.5px; color:var(--muted); margin:10px 0 0}
+  .two{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.15fr); gap:14px; margin-top:14px}
+  .panel{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px 18px}
+  .panel h3{margin:0 0 12px; font-size:16.5px; font-weight:900}
+  .opt{border:1px solid var(--line); border-radius:9px; padding:10px 12px; margin-bottom:9px; font-size:13.5px; line-height:1.45}
+  .opt em{display:inline-block; font-style:normal; font-size:10.5px; font-weight:900; letter-spacing:1.4px; background:var(--navy); color:#fff; padding:2px 7px; border-radius:3px; margin-bottom:5px}
+  table{width:100%; border-collapse:collapse; font-size:13.5px}
+  th{background:var(--navy); color:#fff; text-align:left; padding:8px 10px; font-size:12px; letter-spacing:.4px}
+  th:last-child,td:last-child{text-align:right}
+  td{padding:8px 10px; border-bottom:1px solid #EEE8DA}
+  tr.hl td{background:#FDF3DC}
+  tfoot td{font-weight:900; border-bottom:0}
+
+  /* included: numbered tiles on navy */
+  .navy-sec{background:var(--navy); color:#fff; margin-top:56px; padding:56px 0}
+  .navy-sec .kicker{color:var(--sun)}
+  .navy-sec p.lead{color:#C9D0E4; margin:-8px 0 20px}
+  .feat{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px}
+  .feat div{display:flex; gap:12px; align-items:flex-start; background:var(--navy-3); border:1px solid rgba(255,255,255,.08); border-radius:10px; padding:13px}
+  .feat .no{flex:none; width:34px; height:30px; border-radius:6px; background:var(--sun); color:var(--navy-2); font-weight:900; font-size:13px; display:flex; align-items:center; justify-content:center}
+  .feat p{margin:0; font-size:14px; line-height:1.4}
+  .syl{margin-top:22px; background:var(--cream); color:var(--ink); border-radius:12px; padding:16px}
+  .syl-head{display:flex; justify-content:space-between; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:12px}
+  .syl-head h3{margin:0; font-weight:900; font-size:19px} .syl-head span{font-size:12.5px; color:var(--muted)}
+  .syl-grid{display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:10px}
+  .syl-grid div{background:#fff; border:1px solid var(--line); border-radius:9px; padding:11px 12px}
+  .syl-grid i{display:block; font-style:normal; font-weight:900; font-size:22px; color:#C9C2AE}
+  .syl-grid b{display:block; font-weight:900; font-size:15px; margin-top:2px}
+  .syl-grid small{display:block; font-size:10.5px; font-weight:800; letter-spacing:1.2px; text-transform:uppercase; color:var(--muted); margin-top:2px}
+  .syl-grid .hot{background:var(--sun); border-color:var(--sun)} .syl-grid .hot i{color:#9C6B12} .syl-grid .hot small{color:#5E400A}
+
+  /* road to the written test */
+  .road{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:24px 18px 18px; position:relative}
+  .steps-line{display:grid; grid-template-columns:repeat(3,1fr); position:relative}
+  .steps-line::before{content:""; position:absolute; left:16.6%; right:16.6%; top:11px; height:3px; background:#E9E1CC; border-radius:2px}
+  .stop{text-align:center; position:relative}
+  .stop .dot{width:24px; height:24px; border-radius:50%; margin:0 auto 10px; background:#fff; border:3px solid var(--navy)}
+  .stop.solid .dot{background:var(--navy)} .stop.goal .dot{background:var(--sun); border-color:var(--sun); box-shadow:0 0 0 5px rgba(240,174,52,.25)}
+  .stop b{display:block; font-weight:900; font-size:17px} .stop span{display:block; font-size:12.5px; color:var(--muted); margin-top:3px}
+  .countline{text-align:center; margin-top:14px; font-size:13px; color:var(--muted)} .countline b{color:var(--ink)}
+
+  /* how to join */
+  .join{background:var(--sun); margin-top:56px; padding:56px 0}
+  .join .kicker{color:#6B4A0C}
+  .join-grid{display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr); gap:16px; align-items:stretch}
+  .step{display:flex; gap:14px; align-items:center; background:#fff; border-radius:12px; padding:14px 16px; margin-bottom:10px}
+  .step .no{flex:none; width:34px; height:34px; border-radius:50%; background:var(--navy); color:#fff; font-weight:900; display:flex; align-items:center; justify-content:center}
+  .step b{display:block; font-weight:900; font-size:16px} .step span{display:block; font-size:13px; color:var(--muted); margin-top:2px}
+  .pay{display:inline-flex; gap:6px; margin-top:6px} .pay em{font-style:normal; font-size:11.5px; font-weight:800; padding:3px 8px; border-radius:999px; background:#F3EEDF; color:var(--ink)}
+  .wa-card{background:var(--navy); color:#fff; border-radius:14px; padding:22px; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; gap:8px}
+  .wa-card i.fa-whatsapp{font-size:34px; color:var(--wa)}
+  .wa-card small{font-size:11px; font-weight:800; letter-spacing:2.2px; text-transform:uppercase; color:#C9D0E4}
+  .wa-card .num{font-weight:900; font-size:clamp(26px,3vw,36px); color:var(--sun); letter-spacing:.5px}
+  .wa-btn{display:inline-flex; align-items:center; gap:8px; margin-top:6px; background:var(--wa); color:#06341A; font-weight:900; text-decoration:none; padding:11px 18px; border-radius:999px}
+  .wa-grp{font-size:13px; color:#DCE2F1; text-decoration:underline; text-underline-offset:3px}
+
+  footer{background:var(--navy-2); color:#C9D0E4; padding:26px 0}
+  .foot{display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap}
+  .foot b{display:block; color:#fff; font-weight:900; letter-spacing:.5px; text-transform:uppercase} .foot span{font-size:11.5px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--sun)}
+  .social{display:flex; gap:8px; flex-wrap:wrap}
+  .social a{display:flex; align-items:center; gap:8px; padding:7px 12px; border-radius:999px; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.15); color:#fff; text-decoration:none; font-size:13px; font-weight:700}
+  .social .fa-whatsapp{color:var(--wa); font-size:17px} .social .fa-youtube{color:var(--yt); font-size:17px}
+
+  .sticky-wa{display:none}
+
+  @media (max-width:980px){
+    .hero-grid{grid-template-columns:1fr; gap:26px}
+    .card{justify-self:stretch; max-width:none}
+    .feat{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .syl-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .two,.join-grid{grid-template-columns:1fr}
+  }
+  @media (max-width:640px){
+    .wrap{padding:0 16px}
+    .topbar .pill{display:none}
+    .hero-grid{padding:22px 0 30px}
+    .tiles,.grid3{grid-template-columns:1fr 1fr} .tiles .tile:first-child,.grid3 .box:first-child{grid-column:1 / -1}
+    .feat{grid-template-columns:1fr}
+    .syl-grid{grid-template-columns:1fr 1fr}
+    section.s{padding-top:40px} .navy-sec,.join{margin-top:40px; padding:40px 0}
+    .steps-line{grid-template-columns:1fr; gap:16px} .steps-line::before{left:11px; right:auto; top:12px; bottom:12px; width:3px; height:auto}
+    .stop{text-align:left; display:flex; gap:12px; align-items:center} .stop .dot{margin:0; flex:none}
+    .sticky-wa{display:flex; position:fixed; left:12px; right:12px; bottom:12px; z-index:20; align-items:center; justify-content:center; gap:10px;
+      background:var(--wa-dark); color:#fff; font-weight:900; font-size:16px; text-decoration:none; padding:14px; border-radius:12px; box-shadow:0 10px 30px -10px rgba(0,0,0,.5)}
+    .sticky-wa i{font-size:22px}
+    body{padding-bottom:78px}
   }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <section class="brand">
-    <div class="crest">
-      <div class="disc"><img id="logo" alt="Simply Commerce Academy"></div>
-      <div><b>Simply Commerce Academy</b><span>Where Commerce Meets Clarity</span></div>
-    </div>
-    <div class="hero">
-      <h1>FPSC Exam Portal</h1>
-      <p>Focused preparation for the federal screening test, built around the official syllabus.</p>
-      <div class="post">Assistant Audit Officer (BS-17)<small>Office of the Auditor-General of Pakistan</small></div>
-    </div>
-    <ul class="facts">
-      <li><i class="fa-solid fa-list-check"></i><span>A 100-MCQ paper: 20 English and 80 professional, mirrored in every mock test.</span></li>
-      <li><i class="fa-solid fa-layer-group"></i><span>Topic-wise practice across accounting, auditing and public-sector finance.</span></li>
-      <li><i class="fa-solid fa-language"></i><span>AI explanations for every question, in English or Urdu.</span></li>
-    </ul>
-  </section>
 
-  <section class="side">
-    <form class="card" id="f" autocomplete="off">
-      <h2>Sign in</h2>
-      <p class="sub">Use the mobile number and password we sent you.</p>
-      <label for="phone">Mobile number</label>
-      <div class="field"><i class="fa-solid fa-mobile-screen"></i><input id="phone" inputmode="tel" placeholder="03XX XXXXXXX" required></div>
-      <label for="password">Password</label>
-      <div class="field"><i class="fa-solid fa-lock"></i><input id="password" type="password" required></div>
-      <button class="btn" id="btn" type="submit">Sign in</button>
-      <div class="err" id="err" role="alert"></div>
-      <a class="enrol" href="https://wa.me/923322466420" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i>New here? Enrol on WhatsApp</a>
-    </form>
-    <div class="social">
-      <a href="https://wa.me/923322466420" target="_blank" rel="noopener" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i>+92 332 2466420</a>
-      <a href="https://www.youtube.com/@SimplyCommerceAcademy-i5w" target="_blank" rel="noopener" aria-label="YouTube"><i class="fa-brands fa-youtube"></i>YouTube</a>
+<header class="hero">
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand"><div class="disc"><img id="logo" alt="Simply Commerce Academy logo"></div><div><b>Simply Commerce Academy</b><span>Where Commerce Meets Clarity</span></div></div>
+      <div class="pill">Prospectus 2026–27</div>
     </div>
-    <div class="made">Made by Simply Commerce Academy</div>
-  </section>
-</div>
+    <div class="hero-grid">
+      <div>
+        <div class="band">FPSC · Office of the Auditor-General of Pakistan</div>
+        <h1>Assistant<br>Audit Officer</h1>
+        <div class="posts"><div class="n">160</div><div class="l"><b>POSTS</b><span>BS-17 · Permanent · All Pakistan</span></div></div>
+        <div class="tag"><i class="fa-solid fa-book-open-reader"></i>Online test preparation portal</div>
+        <div class="tiles">
+          <div class="tile sun" id="applyTile"><small>Last date to apply</small><b>23 Nov 2026</b></div>
+          <div class="tile"><small>FPSC written test</small><b>2 Jan 2027</b></div>
+          <div class="tile"><small>Question bank</small><b><span class="mcqCount">600+</span> MCQs</b></div>
+        </div>
+      </div>
+      <form class="card" id="f" autocomplete="off">
+        <h3>Sign in</h3>
+        <p class="sub">Use the mobile number and password we sent you.</p>
+        <label for="phone">Mobile number</label>
+        <div class="field"><i class="fa-solid fa-mobile-screen"></i><input id="phone" inputmode="tel" placeholder="03XX XXXXXXX" required></div>
+        <label for="password">Password</label>
+        <div class="field"><i class="fa-solid fa-lock"></i><input id="password" type="password" autocomplete="current-password" required><button type="button" class="eye" id="eye" aria-label="Show password" aria-pressed="false"><i class="fa-regular fa-eye"></i></button></div>
+        <button class="btn" id="btn" type="submit">Sign in</button>
+        <div class="err" id="err" role="alert"></div>
+        <a class="enrol" href="https://wa.me/923322466420" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i>New here? Enrol on WhatsApp</a>
+      </form>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="s"><div class="wrap">
+    <div class="kicker">01 · <b>The post</b></div>
+    <h2 class="big">Assistant Audit Officer (BS-17)</h2>
+    <div class="grid3">
+      <div class="box"><small>Age limit</small><b>Up to 30 years</b><span>+ 5 years general relaxation</span></div>
+      <div class="box"><small>Place of posting</small><b>Anywhere</b><span>in Pakistan</span></div>
+      <div class="box sun" id="closeBox"><small>Closing date</small><b>23 Nov 2026</b><span id="closeNote">Apply online at fpsc.gov.pk</span></div>
+    </div>
+    <p class="ref">Case No. F.4-195/2026-R · Consolidated Advertisement No. 04/2026 · Office of the Auditor-General of Pakistan · Permanent</p>
+    <div class="two">
+      <div class="panel">
+        <h3>Minimum qualification</h3>
+        <div class="opt"><em>OPTION A</em><br>Second-class Master's in Business Administration (Finance/Accounting), Economics, Commerce, Mathematics or Statistics.</div>
+        <div class="opt"><em>OPTION B</em><br>Master's degree plus ICMA (one-year post-graduate), CA (Foundation) or ACCA (Knowledge level).</div>
+        <div class="opt"><em>OPTION C</em><br>Bachelor's degree with PIPFA (Public Sector) or SAS, plus 3 years' service in the relevant field.</div>
+      </div>
+      <div class="panel">
+        <h3>Domicile / quota</h3>
+        <table>
+          <thead><tr><th>Region</th><th>Posts</th></tr></thead>
+          <tbody>
+            <tr><td>Merit</td><td>12</td></tr>
+            <tr class="hl"><td>Punjab</td><td>80</td></tr>
+            <tr><td>Sindh (Rural)</td><td>18</td></tr>
+            <tr><td>Sindh (Urban)</td><td>12</td></tr>
+            <tr><td>Khyber Pakhtunkhwa</td><td>18</td></tr>
+            <tr><td>Balochistan</td><td>10</td></tr>
+            <tr><td>Ex-FATA, Gilgit-Baltistan &amp; AJK</td><td>10</td></tr>
+          </tbody>
+          <tfoot><tr><td>Total</td><td>160</td></tr></tfoot>
+        </table>
+      </div>
+    </div>
+  </div></section>
+
+  <section class="navy-sec"><div class="wrap">
+    <div class="kicker">02 · What's included</div>
+    <h2 class="big">Everything you need for the AAO written test</h2>
+    <p class="lead">Study at your own pace, on your phone or computer.</p>
+    <div class="feat">
+      <div><span class="no">01</span><p><b class="mcqCount">600+</b> MCQs with answers, mapped to the syllabus</p></div>
+      <div><span class="no">02</span><p>Subject-wise practice across <span class="topicCount">all</span> syllabus topics</p></div>
+      <div><span class="no">03</span><p>Full-length timed mocks: 20 English + 80 professional MCQs</p></div>
+      <div><span class="no">04</span><p>Solved MCQs from FPSC's own Accountancy &amp; Auditing papers</p></div>
+      <div><span class="no">05</span><p>Constitution (Articles 168–171), PFM Act 2019 and Procurement Rules 2026</p></div>
+      <div><span class="no">06</span><p>AI explanation for every MCQ, in English or Urdu</p></div>
+      <div><span class="no">07</span><p>Printable worksheets with answer keys</p></div>
+      <div><span class="no">08</span><p>Progress tracking by topic and mock score</p></div>
+    </div>
+    <div class="syl">
+      <div class="syl-head"><h3>Syllabus covered</h3><span>Live question counts</span></div>
+      <div class="syl-grid">
+        <div><i>01</i><b>Accounting</b><small data-g="Accounting">Part-II</small></div>
+        <div><i>02</i><b>Auditing</b><small data-g="Auditing">Part-II</small></div>
+        <div><i>03</i><b>Public Sector</b><small data-g="Public Sector">Part-II</small></div>
+        <div><i>04</i><b>Economy</b><small data-g="Economy">Part-II</small></div>
+        <div class="hot"><i>05</i><b>English</b><small data-g="English">20 marks</small></div>
+      </div>
+    </div>
+  </div></section>
+
+  <section class="s"><div class="wrap">
+    <div class="kicker">03 · <b>Road to the written test</b></div>
+    <h2 class="big">Three dates that matter</h2>
+    <div class="road">
+      <div class="steps-line">
+        <div class="stop solid"><div class="dot"></div><div><b>23 Nov 2026</b><span>Last date to apply for the post</span></div></div>
+        <div class="stop"><div class="dot"></div><div><b>December</b><span>Revision and final mock tests</span></div></div>
+        <div class="stop goal"><div class="dot"></div><div><b>2 Jan 2027</b><span>FPSC written test (tentative)</span></div></div>
+      </div>
+      <div class="countline" id="countline" hidden></div>
+    </div>
+  </div></section>
+
+  <section class="join"><div class="wrap">
+    <div class="kicker">04 · How to join</div>
+    <h2 class="big">Get your login in three steps</h2>
+    <div class="join-grid">
+      <div>
+        <div class="step"><span class="no">1</span><div><b>Send a WhatsApp message</b><span>Share your name and city on 0332-2466420.</span></div></div>
+        <div class="step"><span class="no">2</span><div><b>Pay the one-time fee</b><span>One payment for full access until the test.</span><div class="pay"><em>Easypaisa</em><em>JazzCash</em></div></div></div>
+        <div class="step"><span class="no">3</span><div><b>Receive your login</b><span>Your mobile number and a password, ready to use on your device.</span></div></div>
+      </div>
+      <div class="wa-card">
+        <i class="fa-brands fa-whatsapp"></i>
+        <small>For registration, WhatsApp</small>
+        <div class="num">0332-2466420</div>
+        <a class="wa-btn" href="https://wa.me/923322466420" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i>Chat on WhatsApp</a>
+        <a class="wa-grp" href="https://chat.whatsapp.com/DHuiEufRVF46P1rHkoLmOq" target="_blank" rel="noopener">Join our WhatsApp group</a>
+      </div>
+    </div>
+  </div></section>
+</main>
+
+<footer><div class="wrap foot">
+  <div><b>Simply Commerce Academy</b><span>Where Commerce Meets Clarity</span></div>
+  <div class="social">
+    <a href="https://wa.me/923322466420" target="_blank" rel="noopener" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i>+92 332 2466420</a>
+    <a href="https://chat.whatsapp.com/DHuiEufRVF46P1rHkoLmOq" target="_blank" rel="noopener" aria-label="WhatsApp group"><i class="fa-brands fa-whatsapp"></i>WhatsApp group</a>
+    <a href="https://www.youtube.com/@SimplyCommerceAcademy-i5w" target="_blank" rel="noopener" aria-label="YouTube"><i class="fa-brands fa-youtube"></i>YouTube</a>
+  </div>
+</div></footer>
+
+<a class="sticky-wa" href="https://wa.me/923322466420" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i>Chat on WhatsApp</a>
+
+<script>
+  // live counts from the question bank
+  fetch("/api/stats").then(r => r.ok ? r.json() : null).then(d => {
+    if(!d) return;
+    if(d.mcqs > 0) document.querySelectorAll(".mcqCount").forEach(e => e.textContent = d.mcqs.toLocaleString("en-US"));
+    if(d.topics > 0) document.querySelectorAll(".topicCount").forEach(e => e.textContent = "all " + d.topics);
+    (d.groups || []).forEach(g => {
+      const el = document.querySelector('.syl-grid small[data-g="' + g.section + '"]');
+      if(el && g.n > 0) el.textContent = (g.section === "English" ? "20 marks · " : "Part-II · ") + g.n + " MCQs";
+    });
+  }).catch(()=>{});
+  // phone: the WhatsApp bar stays out of the way while the sign-in box is on screen or a field is being typed in
+  (function(){
+    const bar = document.querySelector(".sticky-wa"), card = document.getElementById("f");
+    let cardVisible = true, typing = false;
+    const update = () => bar.style.display = (cardVisible || typing) ? "none" : "";
+    if("IntersectionObserver" in window) new IntersectionObserver(es => { cardVisible = es[0].isIntersecting; update(); }).observe(card);
+    document.addEventListener("focusin", e => { if(e.target.matches("input")){ typing = true; update(); } });
+    document.addEventListener("focusout", e => { if(e.target.matches("input")){ typing = false; update(); } });
+  })();
+  // dates tidy themselves: closing date notice and days left to the test
+  (function(){
+    const now = new Date();
+    const pk = new Date(now.getTime() + (now.getTimezoneOffset() + 300) * 60000); // Pakistan time
+    const day = d => new Date(d + "T00:00:00");
+    if(pk >= day("2026-11-24")){
+      document.getElementById("closeNote").textContent = "Applications have closed";
+      const t = document.getElementById("applyTile"); t.classList.remove("sun"); t.querySelector("small").textContent = "Applications closed";
+    }
+    const days = Math.ceil((day("2027-01-02") - pk) / 86400000);
+    if(days > 0){ const c = document.getElementById("countline"); c.innerHTML = "<b>" + days + (days === 1 ? " day" : " days") + "</b> left until the written test"; c.hidden = false; }
+  })();
+</script>
 <script>
   document.getElementById("logo").src = window.SCA_LOGO;
   const link = document.createElement("link"); link.rel = "icon"; link.href = window.SCA_LOGO; document.head.appendChild(link);
@@ -128,6 +356,15 @@
     inactive: "This account is not active. Please contact us on WhatsApp.",
     expired: "Access for this exam cycle has ended.",
   };
+  const pw = document.getElementById("password"), eye = document.getElementById("eye");
+  eye.addEventListener("click", () => {
+    const show = pw.type === "password";
+    pw.type = show ? "text" : "password";
+    eye.setAttribute("aria-pressed", String(show));
+    eye.setAttribute("aria-label", show ? "Hide password" : "Show password");
+    eye.innerHTML = show ? '<i class="fa-regular fa-eye-slash"></i>' : '<i class="fa-regular fa-eye"></i>';
+    pw.focus();
+  });
   const f = document.getElementById("f"), err = document.getElementById("err"), btn = document.getElementById("btn");
   f.addEventListener("submit", async (e) => {
     e.preventDefault(); err.style.display = "none"; btn.disabled = true;

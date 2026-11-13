@@ -12,7 +12,7 @@
 <script src="/assets/logo.js"></script>
 <style>
   :root{
-    --ink:#1C2B5A; --ink-2:#142047; --gold:#C2922A; --gold-soft:#F3E8CC;
+    --ink:#1C2B5A; --ink-2:#142047; --gold:#F0AE34; --gold-soft:#FBE3B0;
     --paper:#F5F3EC; --surface:#fff; --line:#E3DFD3; --muted:#5D6372;
     --teal:#1F5A5C; --ok:#2E7D4F; --ok-bg:#E8F4EC; --bad:#B3362B; --bad-bg:#FBEDEA;
     --wa:#25D366; --yt:#FF0000;
@@ -26,7 +26,7 @@
   button:focus-visible,a:focus-visible{outline:3px solid var(--gold); outline-offset:2px}
 
   /* header */
-  header{background:linear-gradient(90deg,var(--ink-2),var(--ink)); color:#fff; padding:12px 20px; display:flex; align-items:center; gap:12px}
+  header{background:linear-gradient(90deg,var(--ink-2),var(--ink)); color:#fff; padding:12px 20px; display:flex; align-items:center; gap:12px; position:relative; z-index:6}
   .disc{width:40px; height:40px; border-radius:50%; background:#fff; display:flex; align-items:center; justify-content:center; flex:none;
     box-shadow:0 0 0 2px rgba(194,146,42,.6)}
   .disc img{width:30px; height:auto}
@@ -35,7 +35,7 @@
   .ht span{font-size:12px; color:#c9cfe2}
   #who{display:flex; align-items:center; gap:10px; font-size:13px; color:#dfe3ef}
   #who button{background:transparent; border:1px solid rgba(255,255,255,.35); color:#fff; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:13px}
-  .adminbar{background:#FFF6DD; border-bottom:1px solid #EBD9A2; padding:8px 20px; font-size:13.5px; display:none; align-items:center; gap:12px; flex-wrap:wrap}
+  .adminbar{position:relative; z-index:6; background:#FFF6DD; border-bottom:1px solid #EBD9A2; padding:8px 20px; font-size:13.5px; display:none; align-items:center; gap:12px; flex-wrap:wrap}
   .adminbar button{background:var(--ink); color:#fff; border:0; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:13px}
   nav{background:#fff; border-bottom:1px solid var(--line); display:flex; gap:2px; padding:0 14px; overflow-x:auto; position:sticky; top:0; z-index:5}
   nav button{background:none; border:0; border-bottom:3px solid transparent; padding:13px 14px; font-size:14.5px; font-weight:600; color:var(--muted); cursor:pointer; white-space:nowrap}
@@ -49,10 +49,26 @@
   .note{font-size:13.5px; color:var(--muted)}
 
   /* summary */
-  .summary{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:0 0 22px}
+  .summary{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin:0 0 14px}
   .stat{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:14px 16px}
   .stat b{display:block; font-family:var(--serif); font-size:26px; line-height:1.1}
   .stat span{font-size:13px; color:var(--muted)}
+  .stat.sun{background:var(--gold); border-color:var(--gold)} .stat.sun span{color:#5E400A}
+
+  /* method strip and road to the test */
+  .method{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin:0 0 12px}
+  .method button{all:unset; box-sizing:border-box; cursor:pointer; background:var(--surface); border:1px solid var(--line); border-top:3px solid var(--gold); border-radius:10px; padding:10px 12px}
+  .method button:hover{border-color:#d9cfb5; border-top-color:var(--gold)}
+  .method button:focus-visible{outline:3px solid var(--gold); outline-offset:2px}
+  .method small{display:block; font-size:10.5px; font-weight:800; letter-spacing:1.6px; color:#A7741A}
+  .method b{display:block; font-size:15px; margin-top:2px}
+  .method span{display:block; font-size:12.5px; color:var(--muted); margin-top:2px; line-height:1.35}
+  .road{display:flex; align-items:center; gap:0; background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:10px 14px; margin:0 0 22px; flex-wrap:wrap}
+  .road .lbl{font-size:12px; font-weight:800; letter-spacing:1.4px; text-transform:uppercase; color:var(--teal); margin-right:14px}
+  .road .st{display:flex; align-items:center; gap:7px; font-size:13px}
+  .road .st i{width:11px; height:11px; border-radius:50%; border:2px solid var(--ink); display:inline-block}
+  .road .st.goal i{background:var(--gold); border-color:var(--gold)}
+  .road .bar{flex:1; min-width:18px; height:2px; background:#E6DFCD; margin:0 10px}
 
   /* topic cards */
   .secname{display:flex; align-items:center; gap:8px; font-size:12.5px; font-weight:700; color:var(--teal); margin:18px 0 8px; letter-spacing:.2px}
@@ -99,6 +115,23 @@
   .rev .q{font-weight:600; margin-bottom:6px}
   .rev .you{color:var(--bad)} .rev .cor{color:var(--ok)}
 
+  /* page turn (practice) */
+  .book{position:relative; perspective:3200px; perspective-origin:30% 40%}
+  .paper.turning{position:absolute; top:0; left:0; right:0; z-index:3; overflow:hidden; pointer-events:none;
+    transform-origin:left center; backface-visibility:hidden; will-change:transform;
+    animation:pageTurn .8s cubic-bezier(.5,.05,.3,1) forwards}
+  .paper.turning::after{content:""; position:absolute; inset:0; pointer-events:none;
+    background:linear-gradient(90deg, rgba(20,32,71,0) 35%, rgba(20,32,71,.10) 75%, rgba(20,32,71,.28));
+    opacity:0; animation:pageShade .8s ease-in forwards}
+  .book.flipping > .paper:not(.turning){animation:pageUnder .8s ease-out}
+  @keyframes pageTurn{
+    0%{transform:rotateY(0deg); box-shadow:0 0 0 rgba(20,32,71,0)}
+    55%{opacity:1; box-shadow:-24px 6px 40px rgba(20,32,71,.28)}
+    100%{transform:rotateY(-100deg); opacity:0; box-shadow:-40px 10px 50px rgba(20,32,71,0)}}
+  @keyframes pageShade{0%{opacity:0} 70%{opacity:1} 100%{opacity:1}}
+  @keyframes pageUnder{0%{filter:brightness(.9)} 100%{filter:brightness(1)}}
+  @media (prefers-reduced-motion: reduce){ .paper.turning{display:none} .book.flipping > .paper{animation:none} }
+
   /* AI explain */
   .ai{margin-top:12px}
   .ai-btn{display:inline-flex; align-items:center; gap:8px; border:1px solid #CDB7F0; background:linear-gradient(180deg,#F7F2FF,#EFE6FF);
@@ -118,9 +151,9 @@
   .qb-chips button{border:1px solid var(--line); background:#fff; color:var(--ink); padding:6px 13px; border-radius:999px; font-size:13.5px; cursor:pointer; font-weight:600}
   .qb-chips button.on{background:var(--ink); color:#fff; border-color:var(--ink)}
   .qb-tools{display:flex; justify-content:space-between; align-items:center; gap:10px; margin:0 0 10px; flex-wrap:wrap}
-  .qb-tools .mode{display:inline-flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; background:#fff}
-  .qb-tools .mode button{border:0; background:#fff; padding:7px 12px; font-size:13px; font-weight:600; color:var(--muted); cursor:pointer}
-  .qb-tools .mode button.on{background:var(--teal); color:#fff}
+  .mode{display:inline-flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; background:#fff}
+  .mode button{border:0; background:#fff; padding:7px 12px; font-size:13px; font-weight:600; color:var(--muted); cursor:pointer}
+  .mode button.on{background:var(--teal); color:#fff}
   .qb-banner{background:linear-gradient(90deg,#2c6e8e,#6a4ea1); color:#fff; text-align:center; font-weight:700; font-size:14.5px; line-height:1.45;
     padding:10px 14px; border-radius:8px; margin-bottom:12px}
   .qb-cols{column-count:2; column-gap:14px}
@@ -151,6 +184,47 @@
   .qb-opt.picked-right{background:var(--ok-bg); color:var(--ok); font-weight:600}
   .qb-opt.picked-wrong{background:var(--bad-bg); color:var(--bad); font-weight:600}
 
+  .tools-r{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+  .pbtn{display:inline-flex; align-items:center; gap:7px; border:1px solid var(--line); background:#fff; color:var(--ink); padding:7px 12px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer}
+  .pbtn:hover{border-color:#c9c3b2}
+  .print-head,.print-key{display:none}
+
+  /* topic view: one topic, clean single column */
+  .tv-head{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:16px 18px; margin-bottom:14px}
+  .tv-kicker{font-size:12px; font-weight:700; color:var(--teal); letter-spacing:.3px}
+  .tv-head h2{margin:4px 0 10px; font-size:21px; line-height:1.3}
+  .tv-bar{display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap}
+  .tv-list .qb-card{padding:16px 18px 14px; margin-bottom:12px; border-color:var(--line); border-radius:12px}
+  .tv-list .qb-q{font-family:var(--serif); font-weight:600; font-size:16.5px; line-height:1.45}
+  .tv-list .qb-num{background:var(--ink); min-width:26px; height:26px; font-size:13px; border-radius:50%}
+  .tv-list .qb-opts{margin:12px 0 0 36px; gap:6px 18px; font-size:14.5px}
+  .tv-list .qb-opt{font-size:14.5px; padding:5px 8px; margin:0 -8px}
+  .tv-list .qb-ex,.tv-list .qb-foot{margin-left:36px}
+
+  @media print{
+    @page{margin:12mm}
+    *{-webkit-print-color-adjust:exact; print-color-adjust:exact}
+    body{background:#fff; font-size:12px}
+    header,nav,.adminbar,footer,.back,.qb-chips,.qb-tools,.tv-bar,.qb-foot,.ai{display:none !important}
+    main,main.wide{max-width:none; padding:0}
+    .print-head{display:flex; gap:12px; align-items:center; border-bottom:2px solid var(--ink); padding-bottom:8px; margin-bottom:12px; font-size:12px}
+    .print-head img{width:38px; height:auto}
+    .print-head .pt{font-family:var(--serif); font-size:17px; font-weight:700; margin-top:2px}
+    .print-head .pm{color:#555; font-size:11px; margin-top:2px}
+    .tv-head{border:0; padding:0; margin:0 0 8px} .tv-head h2,.tv-kicker{display:none}
+    .tv-list{column-count:2; column-gap:14px}
+    .tv-list .qb-card,.qb-card{break-inside:avoid; border:1px solid #ccc; border-radius:6px; padding:8px 9px; margin:0 0 8px}
+    .qb-q,.tv-list .qb-q{font-family:var(--sans); font-size:12.5px; font-weight:700}
+    .qb-banner{padding:6px 10px; font-size:12.5px} .qb-sec{font-size:12.5px; padding:5px 8px}
+    .tv-list .qb-opts,.tv-list .qb-ex{margin-left:30px}
+    .qb-opts{font-size:12px} .tv-list .qb-opt,.qb-opt{font-size:12px; padding:1px 4px}
+    .self .qb-card .qb-ans{visibility:hidden !important}
+    .self .qb-opt,.self .qb-opt.right,.self .qb-opt.picked-right,.self .qb-opt.picked-wrong{background:none !important; color:#2b3340 !important; font-weight:400 !important}
+    .print-key{display:block; break-before:page}
+    .print-key h3{font-family:var(--serif); font-size:16px; margin:0 0 8px}
+    .pkey-grid{display:grid; grid-template-columns:repeat(10,1fr); gap:4px 10px; font-size:12px}
+  }
+
   table{width:100%; border-collapse:collapse; background:#fff; border:1px solid var(--line); font-size:14px; border-radius:10px; overflow:hidden}
   th,td{padding:10px 12px; text-align:left; border-bottom:1px solid var(--line)}
   th{background:#FAF8F2; font-size:12.5px; color:var(--muted)}
@@ -158,7 +232,7 @@
   .tablewrap{overflow-x:auto}
   .lockmsg{max-width:440px; margin:60px auto; background:#fff; border-top:4px solid var(--gold); border-radius:12px; padding:26px; text-align:center}
 
-  footer{border-top:1px solid var(--line); background:#fff; padding:18px 16px 26px; text-align:center}
+  footer{position:relative; z-index:4; border-top:1px solid var(--line); background:#fff; padding:18px 16px 26px; text-align:center}
   .social{display:flex; gap:10px; justify-content:center; flex-wrap:wrap}
   .social a{display:flex; align-items:center; gap:8px; padding:8px 13px; border-radius:999px; border:1px solid var(--line); color:var(--ink); text-decoration:none; font-size:13.5px; font-weight:600}
   .social .fa-whatsapp{color:var(--wa); font-size:18px} .social .fa-youtube{color:var(--yt); font-size:18px}
@@ -166,7 +240,8 @@
 
   @media (max-width:760px){
     .tgrid,.summary{grid-template-columns:1fr}
-    .summary{grid-template-columns:repeat(3,1fr)} .stat{padding:10px} .stat b{font-size:21px}
+    .summary{grid-template-columns:repeat(2,1fr)} .stat{padding:10px} .stat b{font-size:21px}
+    .method{grid-template-columns:1fr 1fr} .road .bar{display:none} .road{gap:6px 14px} .road .lbl{flex-basis:100%}
     .qb-cols{column-count:1} .qb-opts{grid-template-columns:1fr}
     .ht span{display:none} #who .nm{display:none}
     .qtext{font-size:17.5px}
@@ -193,6 +268,7 @@
 <footer>
   <div class="social">
     <a href="https://wa.me/923322466420" target="_blank" rel="noopener" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i>+92 332 2466420</a>
+    <a href="https://chat.whatsapp.com/DHuiEufRVF46P1rHkoLmOq" target="_blank" rel="noopener" aria-label="WhatsApp group"><i class="fa-brands fa-whatsapp"></i>WhatsApp group</a>
     <a href="https://www.youtube.com/@SimplyCommerceAcademy-i5w" target="_blank" rel="noopener" aria-label="YouTube"><i class="fa-brands fa-youtube"></i>YouTube</a>
   </div>
   <div class="made">Made by Simply Commerce Academy</div>
@@ -265,10 +341,23 @@ function viewSyllabus(){
   const practised = TOPICS.filter(t=>bestFor(t.id)!==null).length;
   const mocks = PROG.recent.filter(a=>a.kind==="mock");
   const bestMock = mocks.length ? Math.max(...mocks.map(a=>Math.round(100*a.score/a.total)))+"%" : "—";
+  const pk = new Date(Date.now() + (new Date().getTimezoneOffset() + 300) * 60000);
+  const daysLeft = Math.ceil((new Date("2027-01-02T00:00:00") - pk) / 86400000);
   let h = `<div class="summary">
     <div class="stat"><b>${total}</b><span>MCQs in the bank</span></div>
     <div class="stat"><b>${practised}/${TOPICS.length}</b><span>Topics practised</span></div>
-    <div class="stat"><b>${bestMock}</b><span>Best mock score</span></div></div>`;
+    <div class="stat"><b>${bestMock}</b><span>Best mock score</span></div>
+    ${daysLeft>0?`<div class="stat sun"><b>${daysLeft}</b><span>Days to the written test</span></div>`:""}</div>
+    <div class="method">
+      <button onclick="openTopic(TOPICS[0].id)"><small>STEP 1</small><b>Learn</b><span>View MCQs topic by topic, with AI explanations</span></button>
+      <button onclick="document.querySelector('.tcard .b.primary').scrollIntoView({behavior:'smooth',block:'center'})"><small>STEP 2</small><b>Practise</b><span>20 questions at a time, Correct or Wrong instantly</span></button>
+      <button onclick="show('mock')"><small>STEP 3</small><b>Test</b><span>Full 100-MCQ timed mock on the paper pattern</span></button>
+      <button onclick="show('progress')"><small>STEP 4</small><b>Revise</b><span>My progress shows your weakest topics</span></button>
+    </div>
+    <div class="road"><span class="lbl">Road to the test</span>
+      <span class="st"><i></i>23 Nov · Last date to apply</span><span class="bar"></span>
+      <span class="st"><i></i>December · Revision &amp; final mocks</span><span class="bar"></span>
+      <span class="st goal"><i></i><b>2 Jan 2027 · Written test</b></span></div>`;
   const parts = [
     {part:"I",  head:"Part-I · English", marks:"20 marks of 100"},
     {part:"II", head:"Part-II · Professional", marks:"80 marks of 100 · accounting, auditing and public-sector finance"},
@@ -288,7 +377,7 @@ function viewSyllabus(){
           <div class="meter"><i style="width:${b||0}%"></i></div>
           <div class="tact">
             <button class="b primary" onclick="startPractice(${t.id})">Practise</button>
-            <button class="b ghost" onclick="openBank('${esc(t.section)}')">View MCQs</button>
+            <button class="b ghost" onclick="openTopic(${t.id})">View MCQs</button>
             ${t.has_notes?`<button class="b ghost" onclick="openNotes(${t.id})">Notes</button>`:""}
           </div></div>`;
       }
@@ -315,17 +404,30 @@ async function startPractice(id){
   document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on", b.dataset.v==="syllabus"));
   renderPractice();
 }
-function renderPractice(){
+function renderPractice(turn){
   const q = P.qs[P.i];
+  const old = turn ? M.querySelector(".book > .paper:not(.turning)") : null;
+  const oldHeight = old ? old.getBoundingClientRect().height : 0, oldHTML = old ? old.innerHTML : "";
   M.innerHTML = `<button class="back" onclick="show('syllabus')">&larr; Quit practice</button>
-    <div class="paper">
+    <div class="book"><div class="paper">
       <div class="qnum">Question ${P.i+1} of ${P.qs.length} · ${esc(topicName(P.topic))}</div>
       <div class="qtext">${esc(q.question)}</div>
       ${L.map(k=>`<button class="opt" data-k="${k}" onclick="answer('${k}')"><span class="k">${k.toUpperCase()}</span><span>${esc(q[k])}</span></button>`).join("")}
       <div id="fb"></div>
       <div class="bar"><span class="note" id="sc">Score so far: ${P.score}</span><button class="btn" id="nx" style="display:none" onclick="nextP()">Next</button></div>
-    </div>`;
+    </div></div>`;
   window.scrollTo(0,0);
+  if(old && !matchMedia("(prefers-reduced-motion: reduce)").matches){
+    // lay the previous question over the new one and turn it away like a book page
+    const book = M.querySelector(".book"), page = document.createElement("div");
+    page.className = "paper turning"; page.setAttribute("aria-hidden","true");
+    page.innerHTML = oldHTML; page.style.height = oldHeight + "px";
+    page.querySelectorAll("[id]").forEach(e=>e.removeAttribute("id"));
+    book.appendChild(page); book.classList.add("flipping");
+    const done = () => { page.remove(); book.classList.remove("flipping"); };
+    page.addEventListener("animationend", e => { if(e.target===page) done(); });
+    setTimeout(done, 1200);
+  }
 }
 function answer(k){
   const q = P.qs[P.i], ok = k===q.correct;
@@ -341,7 +443,7 @@ function answer(k){
 }
 async function nextP(){
   P.i++;
-  if(P.i < P.qs.length){ renderPractice(); return; }
+  if(P.i < P.qs.length){ renderPractice(true); return; }
   await api("/attempt",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({kind:"practice",topic_id:P.topic,score:P.score,total:P.qs.length})});
   const pct = Math.round(100*P.score/P.qs.length);
   M.innerHTML = `<div class="paper" style="text-align:center"><h2>Practice complete</h2>
@@ -350,9 +452,23 @@ async function nextP(){
     <button class="btn" onclick="refreshProgress().then(()=>show('syllabus'))">Back to syllabus</button></div></div>`;
 }
 
-/* ---------- question bank ---------- */
+/* ---------- question bank & topic MCQs ---------- */
 let BANK = {section:"all", self:false};
+let TV = {id:null, self:false};
 function openBank(section){ BANK.section = section; show("bank"); }
+function qCard(q, n, self){
+  return `<div class="qb-card" data-c="${q.correct}" data-id="${q.id}">
+    <div class="qb-head"><span class="qb-num">${n}</span><div class="qb-q">${esc(q.question)}</div><span class="qb-ans ${q.correct}">${q.correct.toUpperCase()}</span></div>
+    <div class="qb-opts">${L.map(k=>`<button class="qb-opt ${k===q.correct?"right":""}" data-k="${k}" onclick="pickBank(this)"><b>${k.toUpperCase()}</b><span>${esc(q[k])}</span></button>`).join("")}</div>
+    ${q.explanation?`<div class="qb-ex">${esc(q.explanation)}</div>`:""}
+    <div class="qb-foot">${self?"":aiBox(q.id,true)}</div>
+  </div>`;
+}
+function modeToggle(self, fn){
+  return `<div class="mode"><button class="${self?"":"on"}" onclick="${fn}(false)">Show answers</button><button class="${self?"on":""}" onclick="${fn}(true)">Hide answers</button></div>`;
+}
+const printBtn = `<button class="pbtn" onclick="printQuestions()"><i class="fa-solid fa-print"></i>Print</button>`;
+function setBankSelf(v){ BANK.self = v; viewBank(); }
 async function viewBank(){
   M.classList.add("wide");
   const groups = ["all", ...new Set(TOPICS.map(t=>t.section))];
@@ -364,31 +480,66 @@ async function viewBank(){
   let n = 0, body = "";
   topics.forEach((t,i)=>{
     body += `<div class="qb-sec"><span>Section ${String.fromCharCode(65+i)}</span>${esc(t.title)}</div>`;
-    for(const q of qs.filter(x=>x.topic_id===t.id)){
-      n++;
-      body += `<div class="qb-card" data-c="${q.correct}" data-id="${q.id}">
-        <div class="qb-head"><span class="qb-num">${n}</span><div class="qb-q">${esc(q.question)}</div><span class="qb-ans ${q.correct}">${q.correct.toUpperCase()}</span></div>
-        <div class="qb-opts">${L.map(k=>`<button class="qb-opt ${k===q.correct?"right":""}" data-k="${k}" onclick="pickBank(this)"><b>${k.toUpperCase()}</b><span>${esc(q[k])}</span></button>`).join("")}</div>
-        ${q.explanation?`<div class="qb-ex">${esc(q.explanation)}</div>`:""}
-        <div class="qb-foot">${BANK.self?"":aiBox(q.id,true)}</div>
-      </div>`;
-    }
+    for(const q of qs.filter(x=>x.topic_id===t.id)) body += qCard(q, ++n, BANK.self);
   });
-  M.innerHTML = `<div class="${BANK.self?"self":""}" id="qbw">
+  M.innerHTML = `<div class="${BANK.self?"self":""}" id="qbw" data-title="${esc(title)}" data-count="${qs.length}">
+    <div class="print-head" id="phead"></div>
     <div class="qb-chips">${chips}</div>
     <div class="qb-tools"><span class="note">${BANK.self?"Pick an answer on any card to check yourself.":"Answers are marked in green."}</span>
-      <div class="mode"><button class="${BANK.self?"":"on"}" onclick="BANK.self=false;viewBank()">Show answers</button><button class="${BANK.self?"on":""}" onclick="BANK.self=true;viewBank()">Hide answers</button></div></div>
+      <div class="tools-r">${modeToggle(BANK.self,"setBankSelf")}${printBtn}</div></div>
     <div class="qb-banner">${esc(title)} — FPSC Assistant Audit Officer (BS-17) · ${qs.length} MCQs with answers</div>
-    ${qs.length?`<div class="qb-cols">${body}</div>`:`<p class="note">No questions in this group yet.</p>`}</div>`;
+    ${qs.length?`<div class="qb-cols">${body}</div>`:`<p class="note">No questions in this group yet.</p>`}
+    <div class="print-key" id="pkey"></div></div>`;
+}
+
+/* one topic, clean single-column view (from "View MCQs" on the syllabus) */
+function openTopic(id){
+  TV.id = id; TV.self = false;
+  document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on", b.dataset.v==="syllabus"));
+  viewTopic(); window.scrollTo(0,0);
+}
+function setTopicSelf(v){ TV.self = v; viewTopic(); }
+async function viewTopic(){
+  M.classList.remove("wide");
+  const t = TOPICS.find(x=>x.id===TV.id); if(!t){ show("syllabus"); return; }
+  M.innerHTML = `<button class="back" onclick="show('syllabus')">&larr; Back to syllabus</button><p class="note">Loading questions…</p>`;
+  const d = await api("/bank?topic_id="+t.id);
+  const qs = d.questions;
+  M.innerHTML = `<button class="back" onclick="show('syllabus')">&larr; Back to syllabus</button>
+    <div id="qbw" class="${TV.self?"self":""}" data-title="${esc(t.title)}" data-count="${qs.length}">
+      <div class="print-head" id="phead"></div>
+      <div class="tv-head">
+        <div class="tv-kicker">Part-${t.part} · ${esc(t.section)}</div>
+        <h2>${esc(t.title)}</h2>
+        <div class="tv-bar"><span class="note">${qs.length} MCQs · ${TV.self?"Pick an answer to check yourself.":"Correct answers are marked in green."}</span>
+          <div class="tools-r">${modeToggle(TV.self,"setTopicSelf")}${printBtn}<button class="b primary" onclick="startPractice(${t.id})">Practise</button></div></div>
+      </div>
+      ${qs.length?`<div class="tv-list">${qs.map((q,i)=>qCard(q,i+1,TV.self)).join("")}</div>`:`<p class="note">No questions in this topic yet.</p>`}
+      <div class="print-key" id="pkey"></div>
+    </div>`;
 }
 function pickBank(btn){
-  if(!BANK.self) return;
   const card = btn.closest(".qb-card");
-  if(card.classList.contains("done")) return;
+  if(!card.closest(".self") || card.classList.contains("done")) return;
   const ok = btn.dataset.k === card.dataset.c;
   card.classList.add("done");
   btn.classList.add(ok?"picked-right":"picked-wrong");
   card.querySelector(".qb-foot").innerHTML = `<span class="verdict ${ok?"ok":"no"}"><i class="fa-solid ${ok?"fa-circle-check":"fa-circle-xmark"}"></i>${ok?"Correct":"Wrong"}</span>${aiBox(Number(card.dataset.id),true)}`;
+}
+
+/* print whatever list is on screen: with answers, or as a worksheet with an answer key at the end */
+function printQuestions(){
+  const w = document.getElementById("qbw"); if(!w) return;
+  const worksheet = w.classList.contains("self");
+  const cards = [...w.querySelectorAll(".qb-card")];
+  const today = new Date().toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});
+  document.getElementById("phead").innerHTML = `<img src="${window.SCA_LOGO}" alt="">
+    <div><b>FPSC Exam Portal</b> · Simply Commerce Academy · Assistant Audit Officer (BS-17)
+    <div class="pt">${esc(w.dataset.title)}</div>
+    <div class="pm">${w.dataset.count} MCQs · ${worksheet?"Worksheet, answers at the end":"With answers"} · Printed for ${esc(ME.name)} on ${today}</div></div>`;
+  document.getElementById("pkey").innerHTML = worksheet && cards.length
+    ? `<h3>Answer key</h3><div class="pkey-grid">${cards.map((c,i)=>`<span><b>${i+1}.</b> ${c.dataset.c.toUpperCase()}</span>`).join("")}</div>` : "";
+  window.print();
 }
 
 /* ---------- mock ---------- */

@@ -536,6 +536,13 @@ export async function onRequest(context) {
 
   /* public */
   if (path === "/setup" && method === "POST") return runSetup(env, body);
+  if (path === "/stats" && method === "GET") { // public: counts shown on the sign-in page
+    try {
+      const r = await env.DB.prepare("SELECT (SELECT COUNT(*) FROM mcqs) AS mcqs, (SELECT COUNT(*) FROM topics) AS topics").first();
+      const g = (await env.DB.prepare("SELECT t.section AS section, COUNT(m.id) AS n FROM topics t LEFT JOIN mcqs m ON m.topic_id = t.id GROUP BY t.section").all()).results;
+      return json({ mcqs: r ? r.mcqs : 0, topics: r ? r.topics : 0, groups: g || [] });
+    } catch { return json({ mcqs: 0, topics: 0, groups: [] }); }
+  }
   if (path === "/doc-push" && method === "POST") {
     if (!env.DOC_SYNC_KEY) return json({ ok: false, message: "DOC_SYNC_KEY is not set in Cloudflare yet." }, 503);
     if (!sameText(request.headers.get("X-Sync-Key") || "", env.DOC_SYNC_KEY)) return json({ ok: false, message: "Wrong sync key." }, 403);
@@ -592,12 +599,15 @@ export async function onRequest(context) {
   }
   if (path === "/bank" && method === "GET") {
     const g = await requireAccess(env, request); if (g.err) return g.err;
-    const section = new URL(request.url).searchParams.get("section") || "all";
+    const sp = new URL(request.url).searchParams;
+    const section = sp.get("section") || "all", topicId = Number(sp.get("topic_id")) || 0;
     const base = `SELECT m.id, m.topic_id, m.question, m.a, m.b, m.c, m.d, m.correct, m.explanation
                   FROM mcqs m JOIN topics t ON t.id = m.topic_id`;
-    const run = order => section === "all"
-      ? env.DB.prepare(base + order).all()
-      : env.DB.prepare(base + " WHERE t.section = ?" + order).bind(section).all();
+    const run = order => topicId
+      ? env.DB.prepare(base + " WHERE m.topic_id = ?" + order).bind(topicId).all()
+      : section === "all"
+        ? env.DB.prepare(base + order).all()
+        : env.DB.prepare(base + " WHERE t.section = ?" + order).bind(section).all();
     let rows;
     try { rows = (await run(" ORDER BY t.sort, m.pos, m.id")).results; }
     catch { rows = (await run(" ORDER BY t.sort, m.id")).results; } // before the first document sync
