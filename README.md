@@ -24,8 +24,9 @@ Live on Cloudflare Pages: production deploys from `main`, previews from every ot
 - One device per student; use "reset device" when a student changes phones.
 - Change the expiry date in "Access window" once FPSC announces the test date.
 
-## Content status
-All topics, notes and MCQs are **samples** and marked as such. Replace them before launch; the FPSC syllabus should be verified against fpsc.gov.pk when published.
+## Question bank
+Load or replace the bank from the admin panel: Question bank → choose the `.json` bank file → Replace question bank.
+Replacing removes current topics and questions and clears practice and mock scores.
 
 ## Files
 - `index.html` — sign-in

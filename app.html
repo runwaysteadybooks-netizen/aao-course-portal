@@ -84,6 +84,39 @@
   .rev{border:1px solid var(--rule); border-radius:6px; padding:12px 14px; margin-bottom:10px; background:#fff; font-size:14px}
   .rev .q{font-weight:600; margin-bottom:6px}
   .rev .you{color:var(--bad)} .rev .cor{color:var(--ok)}
+  /* ---------- question bank (supplied MCQ sheet format) ---------- */
+  .qb-wrap{max-width:1100px; margin:0 auto}
+  main.wide{max-width:1120px}
+  .qb-chips{display:flex; flex-wrap:wrap; gap:6px; margin:4px 0 12px}
+  .qb-chips button{border:1px solid var(--rule); background:#fff; color:var(--ink); padding:6px 12px; border-radius:16px; font-size:13.5px; cursor:pointer}
+  .qb-chips button.on{background:var(--ink); color:#fff; border-color:var(--ink)}
+  .qb-tools{display:flex; justify-content:flex-end; margin:-4px 0 10px}
+  .qb-tools button{border:1px solid var(--ink); background:#fff; color:var(--ink); padding:6px 12px; border-radius:4px; font-size:13px; cursor:pointer}
+  .qb-banner{background:linear-gradient(90deg,#2c6e8e,#6a4ea1); color:#fff; text-align:center; font-weight:700;
+    font-size:14.5px; line-height:1.45; padding:9px 14px; border-radius:6px 6px 0 0; margin-bottom:10px}
+  .qb-cols{column-count:2; column-gap:14px}
+  .qb-sec{display:flex; align-items:center; gap:8px; background:#1f5a5c; color:#fff; font-weight:700; font-size:14px;
+    padding:6px 8px; border-radius:4px; margin:0 0 10px; break-inside:avoid; break-after:avoid}
+  .qb-sec span{background:#fff; color:#1f2b3a; font-size:12px; padding:2px 6px; border-radius:3px; white-space:nowrap}
+  .qb-card{break-inside:avoid; background:#fff; border:1px solid #dfe3ea; border-radius:6px; padding:10px 12px 9px; margin:0 0 10px; cursor:default}
+  .qb-head{display:flex; gap:8px; align-items:flex-start}
+  .qb-num{flex:none; min-width:21px; height:21px; padding:0 4px; border-radius:4px; background:#3b6fd6; color:#fff;
+    font-size:12.5px; font-weight:700; display:flex; align-items:center; justify-content:center; margin-top:1px}
+  .qb-q{flex:1; font-weight:700; font-size:14.5px; line-height:1.38; color:#1f2b3a}
+  .qb-ans{flex:none; width:22px; height:22px; border-radius:4px; color:#fff; font-weight:700; font-size:13px;
+    display:flex; align-items:center; justify-content:center; margin-top:1px}
+  .qb-ans.a{background:#3a9d4a} .qb-ans.b{background:#3b6fd6} .qb-ans.c{background:#8a4fc8} .qb-ans.d{background:#e8742c}
+  .qb-opts{display:grid; grid-template-columns:1fr 1fr; gap:3px 14px; margin:8px 0 0 29px; font-size:13.5px; line-height:1.35; color:#2b3340}
+  .qb-opts div{display:flex; gap:6px}
+  .qb-opts b{color:#1f5a5c; flex:none}
+  .qb-opts div.right{color:#1d6b2c; font-weight:600}
+  .qb-ex{margin:6px 0 0 29px; font-size:12.5px; color:var(--muted); font-style:italic}
+  .qb-hidden .qb-ans, .qb-hidden .qb-ex{visibility:hidden}
+  .qb-hidden .qb-opts div.right{color:#2b3340; font-weight:400}
+  .qb-hidden .qb-card{cursor:pointer}
+  .qb-hidden .qb-card.shown .qb-ans, .qb-hidden .qb-card.shown .qb-ex{visibility:visible}
+  .qb-hidden .qb-card.shown .qb-opts div.right{color:#1d6b2c; font-weight:600}
+  @media (max-width:760px){ .qb-cols{column-count:1} .qb-opts{grid-template-columns:1fr} }
 </style>
 </head>
 <body>
@@ -98,6 +131,7 @@
 </div>
 <nav id="nav" style="display:none">
   <button data-v="syllabus" class="on">Syllabus &amp; practice</button>
+  <button data-v="bank">Question bank</button>
   <button data-v="mock">Mock test</button>
   <button data-v="progress">My progress</button>
 </nav>
@@ -155,14 +189,15 @@ function viewSyllabus(){
         const b = bestFor(t.id);
         h += `<div class="trow">
           <span class="t">${esc(t.title)}</span>
+          <span class="chip">${t.n} MCQs</span>
           <span class="chip ${b!==null?"done":""}">${b!==null? "best "+b+"%" : "not practised"}</span>
-          <button onclick="openNotes(${t.id})">Notes</button>
+          ${t.has_notes?`<button onclick="openNotes(${t.id})">Notes</button>`:""}
+          <button onclick="openBank('${esc(t.section)}')">View MCQs</button>
           <button class="primary" onclick="startPractice(${t.id})">Practise</button>
         </div>`;
       }
     }
   }
-  h += `<p class="note">The question bank currently holds sample content while the full course is being loaded.</p>`;
   M.innerHTML = h;
 }
 
@@ -205,7 +240,7 @@ function answer(k){
     if(o.dataset.k===k){ o.classList.add("chosen"); if(k!==q.correct) o.classList.add("wrong"); }
   });
   if(k===q.correct) P.score++;
-  document.getElementById("ex").innerHTML = `<div class="expl"><b>${k===q.correct?"Correct.":"Not quite."}</b> ${esc(q.explanation)}</div>`;
+  document.getElementById("ex").innerHTML = `<div class="expl"><b>${k===q.correct?"Correct.":"Not quite."}</b> ${q.explanation?esc(q.explanation):"The answer is "+q.correct.toUpperCase()+". "+esc(q[q.correct])+"."}</div>`;
   const nx = document.getElementById("nx");
   nx.style.display="inline-block";
   nx.textContent = P.i+1 < P.qs.length ? "Next" : "Finish";
@@ -230,8 +265,7 @@ let K=null;
 function viewMock(){
   M.innerHTML = `<div class="paper">
     <h2>Mock test</h2>
-    <p class="notes" style="white-space:normal">The real paper is 100 MCQs — 20 English and 80 professional — with no negative marking announced so far. This mock draws the same mix from the question bank and runs on a timer. Answers and explanations are shown at the end, not during the test.</p>
-    <p class="note">The bank currently holds sample questions, so this mock will be shorter than 100 until the full content is loaded.</p>
+    <p class="notes" style="white-space:normal">The paper is 100 MCQs: 20 English and 80 professional. This mock draws the same mix at random from the question bank and runs on a timer. Answers are shown at the end, not during the test.</p>
     <div class="bar"><span></span><button class="btn" onclick="startMock()">Start mock test</button></div>
   </div>`;
 }
@@ -299,6 +333,38 @@ async function finishMock(){
   window.scrollTo(0,0);
 }
 
+/* ---------- question bank ---------- */
+let BANK = {section:"all", hide:false};
+function openBank(section){ BANK.section = section; show("bank"); }
+async function viewBank(){
+  M.classList.add("wide");
+  const groups = ["all", ...new Set(TOPICS.map(t=>t.section))];
+  const chips = groups.map(g=>`<button class="${g===BANK.section?"on":""}" onclick="BANK.section='${esc(g)}';viewBank()">${g==="all"?"All topics":esc(g)}</button>`).join("");
+  M.innerHTML = `<div class="qb-wrap"><div class="qb-chips">${chips}</div><p class="note">Loading questions…</p></div>`;
+  const d = await api("/bank?section="+encodeURIComponent(BANK.section));
+  const qs = d.questions;
+  const topics = TOPICS.filter(t=>qs.some(q=>q.topic_id===t.id));
+  const title = BANK.section==="all" ? "Complete question bank" : BANK.section;
+  let n = 0, body = "";
+  topics.forEach((t,i)=>{
+    body += `<div class="qb-sec"><span>Section ${String.fromCharCode(65+i)}</span>${esc(t.title)}</div>`;
+    for(const q of qs.filter(x=>x.topic_id===t.id)){
+      n++;
+      body += `<div class="qb-card" onclick="this.classList.toggle('shown')">
+        <div class="qb-head"><span class="qb-num">${n}</span><div class="qb-q">${esc(q.question)}</div>
+          <span class="qb-ans ${q.correct}">${q.correct.toUpperCase()}</span></div>
+        <div class="qb-opts">${["a","b","c","d"].map(k=>`<div class="${k===q.correct?"right":""}"><b>${k.toUpperCase()}</b><span>${esc(q[k])}</span></div>`).join("")}</div>
+        ${q.explanation?`<div class="qb-ex">${esc(q.explanation)}</div>`:""}
+      </div>`;
+    }
+  });
+  M.innerHTML = `<div class="qb-wrap ${BANK.hide?"qb-hidden":""}" id="qbw">
+    <div class="qb-chips">${chips}</div>
+    <div class="qb-tools"><button onclick="BANK.hide=!BANK.hide;document.getElementById('qbw').classList.toggle('qb-hidden',BANK.hide);this.textContent=BANK.hide?'Show answers':'Hide answers'">${BANK.hide?"Show answers":"Hide answers"}</button></div>
+    <div class="qb-banner">${esc(title)} — FPSC Assistant Audit Officer (BS-17) · ${qs.length} MCQs with answers</div>
+    ${qs.length?`<div class="qb-cols">${body}</div>`:`<p class="note">No questions in this group yet.</p>`}</div>`;
+}
+
 /* ---------- progress ---------- */
 function viewProgress(){
   const rows = PROG.recent.map(a=>`<tr>
@@ -323,7 +389,9 @@ async function refreshProgress(){ PROG = await api("/progress"); }
 function show(v){
   document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on", b.dataset.v===v));
   clearInterval(mockTimer); K=null;
+  M.classList.remove("wide");
   if(v==="syllabus") viewSyllabus();
+  else if(v==="bank") viewBank();
   else if(v==="mock") viewMock();
   else viewProgress();
 }

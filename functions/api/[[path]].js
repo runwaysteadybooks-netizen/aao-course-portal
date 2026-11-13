@@ -296,7 +296,12 @@ export async function onRequest(context) {
   /* student content */
   if (path === "/content" && method === "GET") {
     const g = await requireAccess(env, request); if (g.err) return g.err;
-    const rows = (await env.DB.prepare("SELECT id, part, section, title, sort FROM topics ORDER BY sort").all()).results;
+    const rows = (await env.DB.prepare(
+      `SELECT t.id, t.part, t.section, t.title, t.sort,
+              CASE WHEN LENGTH(t.notes) > 0 THEN 1 ELSE 0 END AS has_notes,
+              (SELECT COUNT(*) FROM mcqs m WHERE m.topic_id = t.id) AS n
+       FROM topics t ORDER BY t.sort`
+    ).all()).results;
     return json({ topics: rows });
   }
   if (path === "/notes" && method === "GET") {
@@ -326,6 +331,16 @@ export async function onRequest(context) {
     const prof = shuffle(all.filter(q => q.part === "II")).slice(0, 80);
     const questions = [...eng, ...prof];
     return json({ questions, minutes: Math.max(10, questions.length) });
+  }
+  if (path === "/bank" && method === "GET") {
+    const g = await requireAccess(env, request); if (g.err) return g.err;
+    const section = new URL(request.url).searchParams.get("section") || "all";
+    const base = `SELECT m.id, m.topic_id, m.question, m.a, m.b, m.c, m.d, m.correct, m.explanation
+                  FROM mcqs m JOIN topics t ON t.id = m.topic_id`;
+    const rows = section === "all"
+      ? (await env.DB.prepare(base + " ORDER BY t.sort, m.id").all()).results
+      : (await env.DB.prepare(base + " WHERE t.section = ? ORDER BY t.sort, m.id").bind(section).all()).results;
+    return json({ questions: rows });
   }
   if (path === "/attempt" && method === "POST") {
     const g = await requireAccess(env, request); if (g.err) return g.err;
@@ -399,6 +414,40 @@ export async function onRequest(context) {
       return json({ error: "bad_action" }, 400);
     }
     return json({ ok: true });
+  }
+  // Replace the whole question bank: step 1 resets topics, step 2 receives questions in chunks.
+  if (path === "/admin/import/start" && method === "POST") {
+    const g = await requireAdmin(env, request); if (g.err) return g.err;
+    const topics = Array.isArray(body.topics) ? body.topics : [];
+    if (!topics.length || topics.length > 40) return json({ error: "bad_file", message: "The file has no topics or too many topics." }, 400);
+    for (const t of topics) {
+      if (!t.title || !["I", "II"].includes(t.part) || !t.section || !Number.isInteger(t.sort))
+        return json({ error: "bad_file", message: "A topic in the file is missing its title, part, section or order." }, 400);
+    }
+    const stmts = [
+      env.DB.prepare("DELETE FROM attempts"),
+      env.DB.prepare("DELETE FROM mcqs"),
+      env.DB.prepare("DELETE FROM topics"),
+      ...topics.map(t => env.DB.prepare("INSERT INTO topics (part, section, title, notes, sort) VALUES (?, ?, ?, ?, ?)")
+        .bind(t.part, String(t.section).slice(0, 60), String(t.title).slice(0, 300), String(t.notes || ""), t.sort)),
+    ];
+    await env.DB.batch(stmts);
+    const rows = (await env.DB.prepare("SELECT id, sort FROM topics").all()).results;
+    const idBySort = Object.fromEntries(rows.map(r => [r.sort, r.id]));
+    return json({ ok: true, ids: topics.map(t => ({ key: t.key, id: idBySort[t.sort] })) });
+  }
+  if (path === "/admin/import/mcqs" && method === "POST") {
+    const g = await requireAdmin(env, request); if (g.err) return g.err;
+    const rows = Array.isArray(body.rows) ? body.rows : [];
+    if (!rows.length || rows.length > 40) return json({ error: "bad_chunk", message: "Send between 1 and 40 questions at a time." }, 400);
+    for (const q of rows) {
+      if (!Number.isInteger(q.topic_id) || !q.question || !q.a || !q.b || !q.c || !q.d || !["a", "b", "c", "d"].includes(q.correct))
+        return json({ error: "bad_question", message: "A question in the file is incomplete." }, 400);
+    }
+    await env.DB.batch(rows.map(q => env.DB.prepare(
+      "INSERT INTO mcqs (topic_id, question, a, b, c, d, correct, explanation) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+    ).bind(q.topic_id, q.question, q.a, q.b, q.c, q.d, q.correct, q.explanation || "")));
+    return json({ ok: true, inserted: rows.length });
   }
   if (path === "/admin/settings" && method === "GET") {
     const g = await requireAdmin(env, request); if (g.err) return g.err;

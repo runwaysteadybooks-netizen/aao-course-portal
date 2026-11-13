@@ -108,6 +108,15 @@ async function dash(){
     </div>
 
     <div class="card">
+      <h2 style="margin-top:0">Question bank</h2>
+      <p class="note" id="qb_count">Counting questions…</p>
+      <label>Import file (.json)</label><input type="file" id="qb_file" accept=".json,application/json">
+      <button class="btn" onclick="importBank()">Replace question bank</button>
+      <div class="msg" id="qb_msg"></div>
+      <p class="note" style="margin-bottom:0">Replacing removes the current topics and questions and clears all practice and mock scores.</p>
+    </div>
+
+    <div class="card">
       <h2 style="margin-top:0">Add a student</h2>
       <div class="row">
         <div><label>Mobile number</label><input id="n_phone" placeholder="03XXXXXXXXX"></div>
@@ -127,6 +136,38 @@ async function dash(){
     <h2>Students</h2>
     <div class="tablewrap"><table id="tbl"></table></div>`;
   await loadStudents();
+  loadBankCount();
+}
+async function loadBankCount(){
+  const {d}=await api("/content");
+  const t=(d&&d.topics)||[];
+  const n=t.reduce((a,x)=>a+(x.n||0),0);
+  document.getElementById("qb_count").textContent=`${n} MCQs across ${t.length} topics.`;
+}
+async function importBank(){
+  const f=document.getElementById("qb_file").files[0];
+  if(!f){ flash("qb_msg",false,"Choose the question bank file first."); return; }
+  let data;
+  try{ data=JSON.parse(await f.text()); }catch{ flash("qb_msg",false,"That file is not a valid question bank file."); return; }
+  if(!data||data.format!=="fpsc-portal-bank-v1"||!Array.isArray(data.topics)||!Array.isArray(data.mcqs)){
+    flash("qb_msg",false,"That file is not a question bank file for this portal."); return;
+  }
+  if(!confirm(`Replace the question bank with ${data.mcqs.length} MCQs in ${data.topics.length} topics?\n\nCurrent questions and all practice and mock scores will be removed.`)) return;
+  flash("qb_msg",true,"Setting up topics…");
+  const {d:st}=await api("/admin/import/start",{topics:data.topics});
+  if(!st||!st.ok){ flash("qb_msg",false,(st&&st.message)||"Could not reset the topics."); return; }
+  const idByKey=Object.fromEntries(st.ids.map(x=>[x.key,x.id]));
+  const rows=data.mcqs.map(q=>({topic_id:idByKey[q.topic],question:q.question,a:q.a,b:q.b,c:q.c,d:q.d,correct:q.correct,explanation:q.explanation||""}));
+  let done=0;
+  for(let i=0;i<rows.length;i+=40){
+    const {d:r}=await api("/admin/import/mcqs",{rows:rows.slice(i,i+40)});
+    if(!r||!r.ok){ flash("qb_msg",false,`Stopped after ${done} of ${rows.length} MCQs: ${(r&&r.message)||"server error"}. Run the import again to start over.`); loadBankCount(); return; }
+    done+=r.inserted;
+    flash("qb_msg",true,`Imported ${done} of ${rows.length} MCQs…`);
+  }
+  flash("qb_msg",true,`Done. Imported ${done} MCQs into ${data.topics.length} topics.`);
+  document.getElementById("qb_file").value="";
+  loadBankCount();
 }
 async function saveExp(){
   const {d}=await api("/admin/settings",{expiry_date:val("exp")});
